@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
 
 	char const *dir_name      = "testdir";
 	char const *dir_name2     = "testdir2";
+	char const *dir_name3     = "testdir3/";
 	char const *file_name     = "test.tst";
 	char const *file_name2    = "test2.tst";
 	char const *file_name3    = "test3.tst";
@@ -68,6 +69,9 @@ int main(int argc, char *argv[])
 
 		/* create subdirectory with relative path */
 		CALL_AND_CHECK(ret, mkdir(dir_name2, 0777), ((ret == 0) || (errno == EEXIST)), "dir_name=%s", dir_name2);
+
+		/* create subdirectory with trailing slash */
+		CALL_AND_CHECK(ret, mkdir(dir_name3, 0777), ((ret == 0) || (errno == EEXIST)), "dir_name=%s", dir_name3);
 
 		/* write pattern to a file */
 		CALL_AND_CHECK(fd, open(file_name, O_CREAT | O_WRONLY), fd >= 0, "file_name=%s", file_name);
@@ -199,8 +203,11 @@ int main(int argc, char *argv[])
 		CALL_AND_CHECK(ret, unlink(file_name), (ret == 0), "file_name=%s", file_name);
 		CALL_AND_CHECK(ret, stat(file_name, &stat_buf), (ret == -1), "file_name=%s", file_name);
 		CALL_AND_CHECK(ret, stat(dir_name2, &stat_buf), (ret == 0), "dir_name=%s", dir_name2);
+		CALL_AND_CHECK(ret, stat(dir_name3, &stat_buf), (ret == 0), "dir_name=%s", dir_name3);
 		CALL_AND_CHECK(ret, rmdir(dir_name2), (ret == 0), "dir_name=%s", dir_name2);
 		CALL_AND_CHECK(ret, stat(dir_name2, &stat_buf), (ret == -1), "dir_name=%s", dir_name2);
+		CALL_AND_CHECK(ret, rmdir(dir_name3), (ret == 0), "dir_name%s", dir_name3);
+		CALL_AND_CHECK(ret, stat(dir_name3, &stat_buf), (ret == -1), "dir_name=%s", dir_name3);
 
 		/* test symbolic links */
 		if ((symlink("/", "symlinks_supported") == 0) || (errno != ENOSYS)) {
