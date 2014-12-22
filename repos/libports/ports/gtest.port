@@ -1,0 +1,21 @@
+LICENSE   := BSD-3-Clause
+VERSION   := 1.7.0
+DOWNLOADS := gtest.svn
+
+URL(gtest) := http://googletest.googlecode.com/svn/trunk
+REV(gtest) := 700
+DIR(gtest) := src/lib/gtest
+
+DIRS := include/gtest
+DIR_CONTENT(include/gtest) := src/lib/gtest/include/gtest/*.h
+
+DIRS += include/gtest/internal
+DIR_CONTENT(include/gtest/internal) := src/lib/gtest/include/gtest/internal/*.h
+
+PATCHES := src/lib/gtest/gtest-port.h.patch
+
+# quick and dirty solution to enable colored console output
+PATCHES += src/lib/gtest/gtest.patch
+
+# workaround for issue #1330:
+PATCHES += src/lib/gtest/gtest-filepath.patch
