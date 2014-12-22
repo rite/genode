@@ -1,0 +1,52 @@
+#
+# Build
+#
+
+build { core init drivers/timer test/libports/gtest-samples }
+
+create_boot_directory
+
+#
+# Generate config
+#
+
+install_config {
+<config>
+	<parent-provides>
+		<service name="ROM"/>
+		<service name="RAM"/>
+		<service name="CAP"/>
+		<service name="PD"/>
+		<service name="LOG"/>
+		<service name="SIGNAL"/>
+	</parent-provides>
+	<default-route>
+		<any-service> <parent/> <any-child/> </any-service>
+	</default-route>
+
+	<start name="timer">
+		<resource name="RAM" quantum="1M"/>
+		<provides> <service name="Timer"/> </provides>
+	</start>
+	<start name="gtest-samples">
+		<resource name="RAM" quantum="1M"/>
+		<config>
+			<libc stdout="/dev/log" stderr="/dev/log">
+				<vfs>
+					<dir name="dev"> <log/> </dir>
+				</vfs>
+			</libc>
+		</config>
+	</start>
+</config>}
+
+#
+# Boot image
+#
+
+build_boot_image { core init timer gtest-samples libc.lib.so stdcxx.lib.so libm.lib.so ld.lib.so }
+
+append qemu_args " -nographic "
+
+run_genode_until {.*child "gtest-samples" exited with exit value .*} 5
+
