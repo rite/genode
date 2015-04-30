@@ -195,8 +195,18 @@ void Pci::Irq_session_component::ack_irq()
 
 Pci::Irq_session_component::Irq_session_component(unsigned irq) : _gsi(irq)
 {
-	/* check if IRQ object was used before */
-	if (!Proxy::get_irq_proxy<Irq_component>(_gsi, &irq_alloc))
+	bool valid = false;
+
+	/* invalid irq number for pci devices */
+	if (irq == 0xFF)
+		return;
+
+	try {
+		/* check if IRQ object was used before */
+		valid = Proxy::get_irq_proxy<Irq_component>(_gsi, &irq_alloc);
+	} catch (Genode::Parent::Service_denied) { }
+
+	if (!valid)
 		PERR("unavailable IRQ object 0x%x requested", _gsi);
 }
 
