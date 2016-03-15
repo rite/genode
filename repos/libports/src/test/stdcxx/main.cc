@@ -82,6 +82,19 @@ static void test_lock_guard()
 }
 
 
+#include <set>
+
+static void test_multiset(uint32_t mod)
+{
+	std::multiset<uint32_t> numbers;
+	for (uint32_t i = 0; i < 0x100000; ++i)
+	{
+		numbers.insert(i % mod);
+	}
+	std::cout << numbers.size() << " numbers inserted" << std::endl;
+}
+
+
 int main(int argc, char **argv)
 {
 	std::cout << "° °° °°° test-stdcxx started °°° °° °"  << std::endl;
@@ -90,6 +103,14 @@ int main(int argc, char **argv)
 	test_cstdlib();
 	test_stdexcept();
 	test_lock_guard();
+
+	std::cout << "test_multiset() ..." << std::endl;
+	test_multiset(3);
+	std::cout << "test_multiset() done" << std::endl;
+
+	std::cout << "test_multiset() ..." << std::endl;
+	test_multiset(3);
+	std::cout << "test_multiset() done" << std::endl;
 
 	std::cout << "° °° °°° test-stdcxx finished °°° °° °" << std::endl;
 }
