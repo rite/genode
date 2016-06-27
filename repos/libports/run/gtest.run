@@ -54,7 +54,7 @@ install_config {
 				</vfs>
 			</libc>
 			<arg value="gtest"/>
-			<arg value="--gtest_filter=-*Death*:InitGoogleTestTest.*:CaptureTest.*"/>
+			<arg value="--gtest_filter=-OutputFile*:Directory*Test.*:*Death*:InitGoogleTestTest.*:CaptureTest.*"/>
 		</config>
 	</start>
 </config>}

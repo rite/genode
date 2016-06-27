@@ -1,6 +1,6 @@
 TARGET = gtest
 
-GTEST_DIR := $(call select_from_ports,gtest)/src/lib/gtest
+GTEST_DIR := $(call select_from_ports,googletest)/src/lib/googletest/googletest
 
 INC_DIR += $(GTEST_DIR)
 
