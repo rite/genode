@@ -15,6 +15,12 @@ DIR_CONTENT(include/gtest/internal) := src/lib/googletest/googletest/include/gte
 DIRS += include/gtest/internal/custom
 DIR_CONTENT(include/gtest/internal/custom) := src/lib/googletest/googletest/include/gtest/internal/custom/*.h
 
+DIRS := include/gmock
+DIR_CONTENT(include/gmock) := src/lib/googletest/googlemock/include/gmock/*.h
+
+DIRS += include/gmock/internal
+DIR_CONTENT(include/gmock/internal) := src/lib/googletest/googlemock/include/gmock/internal/*.h
+
 PATCHES := src/lib/googletest/gtest-port.h.patch
 
 # quick and dirty solution to enable colored console output
