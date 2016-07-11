@@ -9,5 +9,6 @@ INC_DIR += $(GTEST_DIR)/include
 INC_DIR += $(GTEST_DIR)/include/internal
 
 CC_OPT += -DGTEST_HAS_PTHREAD=0
+CC_OPT += -DGTEST_HAS_RTTI=0
 
 LIBS += libc libm stdcxx
