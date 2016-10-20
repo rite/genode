@@ -230,9 +230,10 @@ struct Main
 
 	Main(Genode::Env &env) : env(env)
 	{
-		bool const verbose = config_rom.xml().attribute_value("verbose", false);
+		bool const verbose  = config_rom.xml().attribute_value("verbose", false);
+		long const interval = config_rom.xml().attribute_value("connected_scan_interval", 0L);
 
-		wpa = new (&heap) Wpa_thread(env, wpa_startup_lock(), verbose);
+		wpa = new (&heap) Wpa_thread(env, wpa_startup_lock(), verbose, interval);
 
 		wpa->start();
 
