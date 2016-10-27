@@ -1,0 +1,11 @@
+--- src/kernel/nova/src/hypervisor.ld
++++ src/kernel/nova/src/hypervisor.ld
+@@ -108,7 +108,7 @@ SECTIONS
+ #endif
+         _mempool_f = .;
+ 
+-        . += 32M;
++        . += 128M;
+         . = ALIGN(4M);
+ 
+         PROVIDE (LINK_E = . - OFFSET);
