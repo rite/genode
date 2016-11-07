@@ -122,6 +122,14 @@ append_if [have_spec gpio] config {
 	</start>}
 
 append config {
+
+	<!-- prevent RAM resource upgrades... -->
+	<start name="anothertimer">
+		<binary name="timer"/>
+		<resource name="RAM" quantum"100G"/>
+		<config/>
+	</start>
+
 </config>
 }
 
