@@ -565,10 +565,14 @@ Platform::Platform() :
 	for (unsigned i = 0; i < num_mem_desc; i++, mem_desc++) {
 
 		if (mem_desc->type == Hip::Mem_desc::AVAILABLE_MEMORY) continue;
+		if (mem_desc->type == Hip::Mem_desc::ACPI_RSDT) continue;
+		if (mem_desc->type == Hip::Mem_desc::ACPI_XSDT) continue;
 
 		Hip::Mem_desc * mem_d = (Hip::Mem_desc *)mem_desc_base;
 		for (unsigned j = 0; j < num_mem_desc; j++, mem_d++) {
 			if (mem_d->type == Hip::Mem_desc::AVAILABLE_MEMORY) continue;
+			if (mem_d->type == Hip::Mem_desc::ACPI_RSDT) continue;
+			if (mem_d->type == Hip::Mem_desc::ACPI_XSDT) continue;
 			if (mem_d == mem_desc) continue;
 
 			/* if regions are disjunct all is fine */
