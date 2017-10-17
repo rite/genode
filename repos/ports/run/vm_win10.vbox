@@ -9,8 +9,8 @@
   <Machine uuid="{5b89d0de-111b-47b7-90b4-d1d55702ca59}" name="Win10" OSType="Windows10_64">
     <MediaRegistry>
       <HardDisks>
-        <HardDisk uuid="{dcb43a24-125e-4b58-af54-c50845a0cdab}" location="/win10.vdi" format="VDI" type="Immutable">
-          <HardDisk uuid="{e8fec0da-c29c-411a-8a51-2c2b3208d326}" location="/ram/overlay_win10.vdi" format="VDI" autoReset="true"/>
+        <HardDisk uuid="{d786125b-86b8-42ef-aa10-2aa4a52ed6ea}" location="/win10.vdi" format="VDI" type="Immutable">
+          <HardDisk uuid="{38dfe2fe-e1ad-405a-976b-56072089899a}" location="/ram/overlay_win10.vdi" format="VDI" autoReset="true"/>
         </HardDisk>
       </HardDisks>
       <DVDImages/>
@@ -93,7 +93,7 @@
     <StorageControllers>
       <StorageController name="IDE Controller" type="PIIX4" PortCount="2" useHostIOCache="true" Bootable="true">
         <AttachedDevice type="HardDisk" port="0" device="0">
-          <Image uuid="{e8fec0da-c29c-411a-8a51-2c2b3208d326}"/>
+          <Image uuid="{38dfe2fe-e1ad-405a-976b-56072089899a}"/>
         </AttachedDevice>
         <AttachedDevice passthrough="false" type="DVD" port="1" device="0"/>
       </StorageController>

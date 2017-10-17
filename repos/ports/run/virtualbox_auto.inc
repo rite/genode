@@ -78,7 +78,7 @@ append config {
 		<resource name="RAM" quantum="10M"/>
 		<provides><service name="Block"/></provides>
 		<config>
-			<policy label_prefix="part_blk" device="0"/>
+			<policy label_prefix="part_blk" device="2"/>
 		</config>
 	</start>
 	<start name="part_blk" priority="-1">
@@ -87,11 +87,11 @@ append config {
 		<route>
 			<any-service><child name="ahci_drv"/> <parent/><any-child/></any-service>
 		</route>
-		<config>}
+		<config use_gpt="yes">}
 append_if [expr $use_rumpfs] config {
-			<policy label_prefix="rump_fs" partition="4"/>}
+			<policy label_prefix="rump_fs" partition="3"/>}
 append_if [expr !$use_rumpfs] config {
-			<policy label_prefix="vbox1 -> raw" partition="3"/>}
+			<policy label_prefix="vbox1 -> raw" partition="2"/>}
 append config {
 		</config>
 	</start>}
@@ -215,10 +215,10 @@ append_if [expr $use_usb] config {
 				<inline name="usb_drv.config">}
 
 append_if [expr $use_usb && ![have_spec muen]] config {
-<config uhci="yes" ehci="yes" xhci="yes">}
+<config bios_handoff="no" uhci="yes" ehci="yes" xhci="yes">}
 
 append_if [expr $use_usb && [have_spec muen]] config {
-<config uhci="no" ehci="no" xhci="yes">}
+<config bios_handoff="no" uhci="no" ehci="no" xhci="yes">}
 
 append_if [expr $use_usb] config {
 	<hid/>
