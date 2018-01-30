@@ -1,9 +1,10 @@
 assert_spec x86
 
-proc use_dynamic_rom { } { return true }
+proc use_dynamic_rom { } { return false }
 
 set build_components {
 	core init
+	server/nic_loopback server/nic_dump
 	drivers/timer drivers/nic server/vfs
 	lib/vfs/lxip
 }
@@ -40,9 +41,19 @@ append_platform_drv_config
 
 append config {
 	<start name="nic_drv">
-		<binary name="} [nic_drv_binary] {"/>
+		<binary name="nic_loopback"/>
 		<resource name="RAM" quantum="4M"/>
 		<provides> <service name="Nic"/> </provides>
+	</start>
+
+	<start name="nic_dump">
+		<resource name="RAM" quantum="6M"/>
+		<provides><service name="Nic"/></provides>
+		<config uplink="loopback" downlink="stack_vfs" time="yes"/>
+		<route>
+			<service name="Nic"> <child name="nic_drv"/> </service>
+			<any-service> <parent/> <any-child/> </any-service>
+		</route>
 	</start>}
 
 append_if [use_dynamic_rom] config {
@@ -96,7 +107,11 @@ if {[use_dynamic_rom]} { append config {
 				</dir>
 			</vfs>
 			<default-policy root="/socket" writeable="yes" />
-		</config>}
+		</config>
+		<route>
+			<service name="Nic"> <child name="nic_dump"/> </service>
+			<any-service> <parent/> <any-child/> </any-service>
+		</route>}
 }
 
 append config {
@@ -104,7 +119,7 @@ append config {
 }
 
 append boot_modules {
-	core init timer } [nic_drv_binary] { vfs
+	core init timer nic_loopback nic_dump vfs
 	ld.lib.so libc.lib.so vfs_lxip.lib.so lxip.lib.so
 }
 
@@ -112,6 +127,6 @@ lappend_if [use_dynamic_rom] boot_modules dynamic_rom
 
 append_platform_drv_boot_modules
 
-append qemu_args " -nographic -net nic,model=e1000 -net tap,ifname=tap0,downscript=no,script=no "
+append qemu_args " -nographic "
 
 # vi: set ft=tcl :
