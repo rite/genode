@@ -7,10 +7,10 @@ build $build_components
 create_boot_directory
 
 append config {
-	<start name="netty-server-7">
+	<start name="netty-client-7070">
 		<binary name="test-netty_udp"/>
 		<resource name="RAM" quantum="4M"/>
-		<config ld_verbose="yes" port="7" read_write="no" nonblock="true">
+		<config ld_verbose="yes" mode="client" port="7070">
 			<vfs>
 				<dir name="dev">    <log/> </dir>
 				<dir name="socket"> <fs/>  </dir>
@@ -40,6 +40,8 @@ append boot_modules { test-netty_udp }
 
 build_boot_image $boot_modules
 
-run_genode_until forever
+while {true} {
+	run_genode_until {client test finished} 10
+}
 
 # vi: set ft=tcl :
