@@ -1,0 +1,22 @@
+image: amd64/alpine:3.7
+
+before_script:
+    - apk --update add curl tar xz make bash coreutils findutils git
+    - curl -sL https://sourceforge.net/projects/genode/files/genode-toolchain/17.05/genode-toolchain-17.05-x86_64.tar.xz | tar xPJf -
+    - /usr/local/genode-gcc/bin/genode-x86-g++ --version
+
+stages:
+    - build
+
+create_base-nova:
+    stage: build
+    script:
+        - /usr/local/genode-gcc/bin/genode-x86-g++ --version
+        - ./tool/ports/prepare_port nova
+        - ./tool/depot/create UPDATE_VERIONS=1 FORCE=1 REBUILD= rite/bin/x86_64/base-nova
+
+create_sculpt-installation:
+    stage: build
+    script:
+        - ./tool/depot/create UPDATE_VERIONS=1 FORCE=1 REBUILD= rite/pkg/x86_64/sculpt-installation
+
