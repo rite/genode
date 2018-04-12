@@ -1,7 +1,7 @@
 image: amd64/alpine:3.7
 
 before_script:
-    - apk --update add curl tar xz make bash coreutils findutils git
+    - apk --update add bash util-linux findutils tar xz make expect git subversion patch wget curl ca-certificates coreutils libxslt flex bison yasm iasl rpcgen python musl-dev gnupg
     - curl -sL https://sourceforge.net/projects/genode/files/genode-toolchain/17.05/genode-toolchain-17.05-x86_64.tar.xz | tar xPJf -
     - /usr/local/genode-gcc/bin/genode-x86-g++ --version
 
