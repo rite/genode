@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+
+#
+# \brief  Tool to determine the expected archive version
+# \author Roman Iten
+# \date   2018-05-01
+#
+
+define HELP_MESSAGE
+
+  Determine the expected version of src/bin/pkg archives, as
+  specified in the hash file of the recipe.
+
+  usage:
+
+    $(firstword $(MAKEFILE_LIST)) <archive-path>...
+
+endef
+
+export GENODE_DIR := $(realpath $(dir $(MAKEFILE_LIST))/../..)
+
+include $(GENODE_DIR)/tool/depot/mk/front_end.inc
+
+_versioned_src_of_bin = $1/$(call recipe_version,src/$(call bin_archive_recipe,$1))
+_versioned_pkg        = $1/$(call recipe_version,pkg/$(call bin_archive_recipe,$1))
+
+versioned_archive = $(if $(call archive_has_type,$1,bin),$(call _versioned_src_of_bin,$1),\
+                       $(if $(call archive_has_type,$1,pkg),$(call _versioned_pkg,$1)))
+
+VERSIONED_ARCHIVES = $(strip $(foreach A,$(MAKECMDGOALS),$(call versioned_archive,$A)))
+
+version:
+	@echo $(VERSIONED_ARCHIVES)
+
+$(MAKECMDGOALS): version
+	@true
+
