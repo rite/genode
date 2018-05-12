@@ -511,7 +511,14 @@ close $fd
 # This runtime can be tailored by modifying 'config/deploy/config'.
 #
 
-proc current_pkg { pkg } { return $pkg/[_current_depot_archive_version pkg $pkg] }
+proc current_pkg { pkg } {
+	set version [_current_depot_archive_version pkg $pkg]
+	if {$version == ""} {
+		puts stderr "Error: unable to guess version of '$pkg' archive"
+		exit 1
+	}
+	return $pkg/$version
+}
 
 #
 # Depot packages to be included in the default installation
