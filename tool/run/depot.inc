@@ -127,20 +127,23 @@ proc _collect_src_archive_from_depot { user name version } {
 # Determine the current version for the given archive
 #
 # This function tries to determine the version information from the Genode
-# source tree. It returns an empty string if the archive is missing from the
+# source tree. It exits with an error if the archive is missing from the
 # depot.
 #
 proc _current_depot_archive_version { type name } {
 
 	set hash_rel_path "recipes/$type/$name/hash"
 	set repo [repository_contains $hash_rel_path]
-	set version ""
 
-	if {$repo != ""} {
-		set fh [open "$repo/$hash_rel_path" "RDONLY"]
-		set version [lindex [gets $fh] 0]
-		close $fh
+	if {$repo == ""} {
+		puts stderr "Error: unable to guess version of '$name' archive"
+		exit 1
 	}
+
+	set fh [open "$repo/$hash_rel_path" "RDONLY"]
+	set version [lindex [gets $fh] 0]
+	close $fh
+
 	return $version
 }
 
