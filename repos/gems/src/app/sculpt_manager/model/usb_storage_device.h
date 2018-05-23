@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _USB_STORAGE_DEVICE_H_
-#define _USB_STORAGE_DEVICE_H_
+#ifndef _MODEL__USB_STORAGE_DEVICE_H_
+#define _MODEL__USB_STORAGE_DEVICE_H_
 
 #include "storage_device.h"
 
@@ -169,4 +169,4 @@ struct Sculpt_manager::Usb_storage_device_update_policy
 	}
 };
 
-#endif /* _BLOCK_DEVICE_H_ */
+#endif /* _MODEL__BLOCK_DEVICE_H_ */

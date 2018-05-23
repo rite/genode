@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _PARTITION_H_
-#define _PARTITION_H_
+#ifndef _MODEL__PARTITION_H_
+#define _MODEL__PARTITION_H_
 
 #include "types.h"
 #include "capacity.h"
@@ -167,4 +167,4 @@ struct Sculpt_manager::Partition_update_policy : List_model<Partition>::Update_p
 	}
 };
 
-#endif /* _PARTITION_H_ */
+#endif /* _MODEL__PARTITION_H_ */

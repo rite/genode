@@ -11,14 +11,16 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _DISCOVERY_STATE_H_
-#define _DISCOVERY_STATE_H_
+#ifndef _MODEL__DISCOVERY_STATE_H_
+#define _MODEL__DISCOVERY_STATE_H_
 
 /* Genode includes */
 #include <util/xml_node.h>
 
 /* local includes */
-#include "types.h"
+#include <types.h>
+#include <model/storage_target.h>
+#include <model/storage_devices.h>
 
 namespace Sculpt_manager { struct Discovery_state; }
 
@@ -95,4 +97,4 @@ struct Sculpt_manager::Discovery_state
 	}
 };
 
-#endif /* _DISCOVERY_STATE_H_ */
+#endif /* _MODEL__DISCOVERY_STATE_H_ */

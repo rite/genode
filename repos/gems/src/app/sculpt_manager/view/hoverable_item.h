@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _HOVERABLE_ITEM_H_
-#define _HOVERABLE_ITEM_H_
+#ifndef _VIEW__HOVERABLE_ITEM_H_
+#define _VIEW__HOVERABLE_ITEM_H_
 
 #include "types.h"
 #include "xml.h"
@@ -55,4 +55,4 @@ struct Sculpt_manager::Hoverable_item
 	}
 };
 
-#endif /* _HOVERABLE_ITEM_H_ */
+#endif /* _VIEW__HOVERABLE_ITEM_H_ */

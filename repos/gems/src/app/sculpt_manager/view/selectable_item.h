@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _SELECTABLE_ITEM_H_
-#define _SELECTABLE_ITEM_H_
+#ifndef _VIEW__SELECTABLE_ITEM_H_
+#define _VIEW__SELECTABLE_ITEM_H_
 
 #include "hoverable_item.h"
 

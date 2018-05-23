@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _STORAGE_DEVICES_
-#define _STORAGE_DEVICES_
+#ifndef _MODEL__STORAGE_DEVICES_
+#define _MODEL__STORAGE_DEVICES_
 
 #include "types.h"
 #include "block_device.h"
@@ -83,4 +83,4 @@ struct Sculpt_manager::Storage_devices
 	}
 };
 
-#endif /* _STORAGE_DEVICES_ */
+#endif /* _MODEL__STORAGE_DEVICES_ */

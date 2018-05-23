@@ -11,16 +11,16 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _STORAGE_DIALOG_H_
-#define _STORAGE_DIALOG_H_
+#ifndef _VIEW__STORAGE_DIALOG_H_
+#define _VIEW__STORAGE_DIALOG_H_
 
-#include "types.h"
-#include "selectable_item.h"
-#include "activatable_item.h"
-#include "storage_devices.h"
-#include "storage_target.h"
-#include "ram_fs_state.h"
-#include "dialog.h"
+#include <types.h>
+#include <model/storage_devices.h>
+#include <model/storage_target.h>
+#include <model/ram_fs_state.h>
+#include <view/selectable_item.h>
+#include <view/activatable_item.h>
+#include <view/dialog.h>
 
 namespace Sculpt_manager { struct Storage_dialog; }
 

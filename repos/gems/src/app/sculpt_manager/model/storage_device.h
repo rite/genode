@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _STORAGE_DEVICE_H_
-#define _STORAGE_DEVICE_H_
+#ifndef _MODEL__STORAGE_DEVICE_H_
+#define _MODEL__STORAGE_DEVICE_H_
 
 #include "types.h"
 #include "partition.h"
@@ -249,4 +249,4 @@ void Sculpt_manager::Storage_device::gen_part_blk_start_content(Xml_generator &x
 	});
 }
 
-#endif /* _STORAGE_DEVICE_H_ */
+#endif /* _MODEL__STORAGE_DEVICE_H_ */

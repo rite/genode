@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _CHILD_EXIT_STATE_H_
-#define _CHILD_EXIT_STATE_H_
+#ifndef _MODEL__CHILD_EXIT_STATE_H_
+#define _MODEL__CHILD_EXIT_STATE_H_
 
 /* Genode includes */
 #include <util/xml_node.h>
@@ -44,4 +44,4 @@ struct Sculpt_manager::Child_exit_state
 	}
 };
 
-#endif /* _CHILD_EXIT_STATE_H_ */
+#endif /* _MODEL__CHILD_EXIT_STATE_H_ */

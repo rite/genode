@@ -22,13 +22,13 @@
 #include <children.h>
 
 /* local includes */
-#include "child_exit_state.h"
-#include "storage_dialog.h"
-#include "network_dialog.h"
+#include <model/child_exit_state.h>
+#include <model/discovery_state.h>
+#include <view/storage_dialog.h>
+#include <view/network_dialog.h>
 #include "gui.h"
 #include "nitpicker.h"
 #include "runtime.h"
-#include "discovery_state.h"
 
 namespace Sculpt_manager { struct Main; }
 

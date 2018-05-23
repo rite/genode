@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _RAM_FS_STATE_H_
-#define _RAM_FS_STATE_H_
+#ifndef _MODEL__RAM_FS_STATE_H_
+#define _MODEL__RAM_FS_STATE_H_
 
 /* Genode includes */
 #include <util/xml_node.h>
@@ -33,4 +33,4 @@ struct Sculpt_manager::Ram_fs_state : Noncopyable
 	bool inspected = false;
 };
 
-#endif /* _RAM_FS_STATE_H_ */
+#endif /* _MODEL__RAM_FS_STATE_H_ */

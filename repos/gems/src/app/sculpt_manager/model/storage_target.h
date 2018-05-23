@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _STORAGE_TARGET_H_
-#define _STORAGE_TARGET_H_
+#ifndef _MODEL__STORAGE_TARGET_H_
+#define _MODEL__STORAGE_TARGET_H_
 
 #include "types.h"
 #include "storage_device.h"
@@ -82,4 +82,4 @@ struct Sculpt_manager::Storage_target
 	}
 };
 
-#endif /* _STORAGE_TARGET_H_ */
+#endif /* _MODEL__STORAGE_TARGET_H_ */

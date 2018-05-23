@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _ACCESS_POINT_H_
-#define _ACCESS_POINT_H_
+#ifndef _MODEL__ACCESS_POINT_H_
+#define _MODEL__ACCESS_POINT_H_
 
 #include "types.h"
 
@@ -76,4 +76,4 @@ struct Sculpt_manager::Access_point_update_policy : List_model<Access_point>::Up
 	}
 };
 
-#endif /* _ACCESS_POINT_H_ */
+#endif /* _MODEL__ACCESS_POINT_H_ */

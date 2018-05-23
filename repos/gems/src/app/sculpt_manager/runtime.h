@@ -15,10 +15,10 @@
 #define _RUNTIME_H_
 
 #include <xml.h>
-#include <ram_fs_state.h>
-#include <storage_devices.h>
-#include <storage_target.h>
-#include <nic_target.h>
+#include <model/ram_fs_state.h>
+#include <model/storage_devices.h>
+#include <model/storage_target.h>
+#include <model/nic_target.h>
 
 namespace Sculpt_manager {
 

@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _WIFI_CONNECTION_H_
-#define _WIFI_CONNECTION_H_
+#ifndef _MODEL__WIFI_CONNECTION_H_
+#define _MODEL__WIFI_CONNECTION_H_
 
 #include "access_point.h"
 
@@ -55,4 +55,4 @@ struct Sculpt_manager::Wifi_connection
 	bool connected() const { return state == CONNECTED; }
 };
 
-#endif /* _WIFI_CONNECTION_H_ */
+#endif /* _MODEL__WIFI_CONNECTION_H_ */

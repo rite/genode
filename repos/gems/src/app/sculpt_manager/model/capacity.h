@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _CAPACITY_H_
-#define _CAPACITY_H_
+#ifndef _MODEL__CAPACITY_H_
+#define _MODEL__CAPACITY_H_
 
 #include "types.h"
 
@@ -34,4 +34,4 @@ struct Sculpt_manager::Capacity
 	}
 };
 
-#endif /* _CAPACITY_H_ */
+#endif /* _MODEL__CAPACITY_H_ */

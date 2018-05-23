@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _ACTIVATABLE_ITEM_H_
-#define _ACTIVATABLE_ITEM_H_
+#ifndef _VIEW__ACTIVATABLE_ITEM_H_
+#define _VIEW__ACTIVATABLE_ITEM_H_
 
 #include "hoverable_item.h"
 
@@ -62,4 +62,4 @@ struct Sculpt_manager::Activatable_item : Hoverable_item
 	}
 };
 
-#endif /* _ACTIVATABLE_ITEM_H_ */
+#endif /* _VIEW__ACTIVATABLE_ITEM_H_ */

@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _NIC_TARGET_H_
-#define _NIC_TARGET_H_
+#ifndef _MODEL__NIC_TARGET_H_
+#define _MODEL__NIC_TARGET_H_
 
 #include "types.h"
 
@@ -26,4 +26,4 @@ struct Sculpt_manager::Nic_target
 	Type type;
 };
 
-#endif /* _NIC_TARGET_H_ */
+#endif /* _MODEL__NIC_TARGET_H_ */

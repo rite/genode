@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _DIALOG_H_
-#define _DIALOG_H_
+#ifndef _VIEW__DIALOG_H_
+#define _VIEW__DIALOG_H_
 
 /* Genode includes */
 #include <input/event.h>
@@ -36,4 +36,4 @@ struct Sculpt_manager::Dialog : Interface
 	virtual void hover(Xml_node hover) = 0;
 };
 
-#endif /* _DIALOG_H_ */
+#endif /* _VIEW__DIALOG_H_ */

@@ -11,15 +11,15 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _NETWORK_DIALOG_H_
-#define _NETWORK_DIALOG_H_
+#ifndef _VIEW__NETWORK_DIALOG_H_
+#define _VIEW__NETWORK_DIALOG_H_
 
-#include "types.h"
-#include "dialog.h"
-#include "selectable_item.h"
-#include "nic_target.h"
-#include "nic_state.h"
-#include "wifi_connection.h"
+#include <types.h>
+#include <model/nic_target.h>
+#include <model/nic_state.h>
+#include <model/wifi_connection.h>
+#include <view/dialog.h>
+#include <view/selectable_item.h>
 
 namespace Sculpt_manager { struct Network_dialog; }
 
@@ -75,4 +75,4 @@ struct Sculpt_manager::Network_dialog : Dialog
 	{ }
 };
 
-#endif /* _NETWORK_DIALOG_H_ */
+#endif /* _VIEW__NETWORK_DIALOG_H_ */

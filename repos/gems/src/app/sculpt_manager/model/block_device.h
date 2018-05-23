@@ -11,8 +11,8 @@
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _BLOCK_DEVICE_H_
-#define _BLOCK_DEVICE_H_
+#ifndef _MODEL__BLOCK_DEVICE_H_
+#define _MODEL__BLOCK_DEVICE_H_
 
 #include "storage_device.h"
 
@@ -70,4 +70,4 @@ struct Sculpt_manager::Block_device_update_policy : List_model<Block_device>::Up
 	}
 };
 
-#endif /* _BLOCK_DEVICE_H_ */
+#endif /* _MODEL__BLOCK_DEVICE_H_ */
