@@ -13,6 +13,22 @@
 
 #include <runtime.h>
 
+
+void Sculpt_manager::gen_nic_router_uplink(Xml_generator &xml,
+                                           char const    *label)
+{
+	gen_named_node(xml, "domain", "uplink", [&] () {
+		xml.attribute("label", label);
+		xml.node("nat", [&] () {
+			xml.attribute("domain",    "default");
+			xml.attribute("tcp-ports", "1000");
+			xml.attribute("udp-ports", "1000");
+			xml.attribute("icmp-ids",  "1000");
+		});
+	});
+}
+
+
 void Sculpt_manager::gen_nic_router_start_content(Xml_generator &xml,
                                                   Nic_target const &nic_target)
 {
@@ -33,14 +49,11 @@ void Sculpt_manager::gen_nic_router_start_content(Xml_generator &xml,
 		xml.node("default-policy", [&] () {
 			xml.attribute("domain", "default"); });
 
-		gen_named_node(xml, "domain", "uplink", [&] () {
-			xml.node("nat", [&] () {
-				xml.attribute("domain",    "default");
-				xml.attribute("tcp-ports", "1000");
-				xml.attribute("udp-ports", "1000");
-				xml.attribute("icmp-ids",  "1000");
-			});
-		});
+		switch (nic_target.type) {
+		case Nic_target::WIRED: gen_nic_router_uplink(xml, "wired"); break;
+		case Nic_target::WIFI:  gen_nic_router_uplink(xml, "wifi");  break;
+		default: ;
+		}
 
 		gen_named_node(xml, "domain", "default", [&] () {
 			xml.attribute("interface", "10.0.1.1/24");
@@ -75,14 +88,13 @@ void Sculpt_manager::gen_nic_router_start_content(Xml_generator &xml,
 		gen_parent_route<Log_session>     (xml);
 		gen_parent_route<Timer::Session>  (xml);
 		gen_parent_route<Report::Session> (xml);
-
 		gen_service_node<Nic::Session>(xml, [&] () {
-
-			if (nic_target.type == Nic_target::WIRED)
-				gen_named_node(xml, "child", "nic_drv");
-
-			if (nic_target.type == Nic_target::WIFI)
-				gen_named_node(xml, "child", "wifi_drv");
+			xml.attribute("label", "wired");
+			gen_named_node(xml, "child", "nic_drv");
+		});
+		gen_service_node<Nic::Session>(xml, [&] () {
+			xml.attribute("label", "wifi");
+			gen_named_node(xml, "child", "wifi_drv");
 		});
 	});
 }

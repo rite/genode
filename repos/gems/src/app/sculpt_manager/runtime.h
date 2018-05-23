@@ -43,6 +43,7 @@ namespace Sculpt_manager {
 	void gen_wifi_drv_start_content(Xml_generator &);
 
 	void gen_nic_router_start_content(Xml_generator &, Nic_target const &);
+	void gen_nic_router_uplink(Xml_generator &, char const *);
 
 	struct Prepare_version { unsigned value; };
 	void gen_prepare_start_content(Xml_generator &, Prepare_version);
