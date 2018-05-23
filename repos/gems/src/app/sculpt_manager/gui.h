@@ -51,7 +51,7 @@ void Sculpt_manager::Gui::_gen_menu_view_start_content(Xml_generator &xml,
 {
 	xml.attribute("version", version.value);
 
-	gen_common_start_content(xml, label, Cap_quota{150}, Ram_quota{6*1024*1024});
+	gen_common_start_content(xml, label, Cap_quota{150}, Ram_quota{8*1024*1024});
 
 	gen_named_node(xml, "binary", "menu_view");
 
