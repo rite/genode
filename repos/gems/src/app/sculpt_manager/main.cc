@@ -26,9 +26,10 @@
 #include <model/discovery_state.h>
 #include <view/storage_dialog.h>
 #include <view/network_dialog.h>
-#include "gui.h"
-#include "nitpicker.h"
-#include "runtime.h"
+#include <gui.h>
+#include <nitpicker.h>
+#include <runtime.h>
+#include <keyboard_focus.h>
 
 namespace Sculpt_manager { struct Main; }
 
@@ -235,6 +236,8 @@ struct Sculpt_manager::Main : Input_event_handler,
 	Nic_target _nic_target { };
 	Nic_state  _nic_state  { };
 
+	Wpa_passphrase _wpa_passphrase { };
+
 	bool _use_nic_drv  = false;
 	bool _use_wifi_drv = false;
 
@@ -265,7 +268,8 @@ struct Sculpt_manager::Main : Input_event_handler,
 		_env.ep(), *this, &Main::_handle_nic_router_state };
 
 	Network_dialog _network_dialog {
-		_env, *this, _nic_target, _access_points, _wifi_connection, _nic_state };
+		_env, *this, _nic_target, _access_points, _wifi_connection, _nic_state,
+		_wpa_passphrase };
 
 	Expanding_reporter _wlan_config { _env, "selected_network", "wlan_config" };
 
@@ -288,6 +292,27 @@ struct Sculpt_manager::Main : Input_event_handler,
 
 		_nic_target = nic_target;
 		_generate_runtime_config();
+	}
+
+	void wifi_connect(Access_point::Bssid bssid) override
+	{
+		_access_points.for_each([&] (Access_point const &ap) {
+			if (ap.bssid != bssid)
+				return;
+
+			_wifi_connection.ssid  = ap.ssid;
+			_wifi_connection.bssid = ap.bssid;
+			_wifi_connection.state = Wifi_connection::CONNECTING;
+
+			_wlan_config.generate([&] (Xml_generator &xml) {
+				xml.attribute("ssid", ap.ssid);
+				if (ap.protection == Access_point::WPA_PSK) {
+					xml.attribute("protection", "WPA-PSK");
+					String<128> const psk(_wpa_passphrase);
+					xml.attribute("psk", psk);
+				}
+			});
+		});
 	}
 
 	void wifi_disconnect() override
@@ -374,8 +399,6 @@ struct Sculpt_manager::Main : Input_event_handler,
 
 	Gui _gui { _env };
 
-	Expanding_reporter _focus_reporter { _env, "focus", "focus" };
-
 	Expanding_reporter _dialog_reporter { _env, "dialog", "storage_dialog" };
 
 	Attached_rom_dataspace _hover_rom { _env, "storage_view_hover" };
@@ -447,6 +470,8 @@ struct Sculpt_manager::Main : Input_event_handler,
 
 	void _handle_runtime_state();
 
+	Keyboard_focus _keyboard_focus { _env, _network_dialog, _wpa_passphrase };
+
 	/**
 	 * Input_event_handler interface
 	 */
@@ -459,16 +484,40 @@ struct Sculpt_manager::Main : Input_event_handler,
 
 		if (ev.key_release(Input::BTN_LEFT))
 			_storage_dialog.clack(*this);
+
+		/*
+		 * Insert WPA passphrase
+		 */
+		if (_keyboard_focus.target == Keyboard_focus::WPA_PASSPHRASE) {
+			ev.handle_press([&] (Input::Keycode, Codepoint code) {
+
+				enum { BACKSPACE = 8, ENTER = 10 };
+				if (code.value == BACKSPACE)
+					_wpa_passphrase.remove_last_character();
+				else if (code.value == ENTER)
+					wifi_connect(_network_dialog.selected_ap());
+				else if (code.value != 0)
+					_wpa_passphrase.append_character(code);
+
+				/*
+				 * Keep updating the passphase when pressing keys after
+				 * clicking the connect button once.
+				 */
+				if (_wifi_connection.state == Wifi_connection::CONNECTING)
+					wifi_connect(_wifi_connection.bssid);
+
+				generate_dialog();
+			});
+		}
+
+		if (ev.press())
+			_keyboard_focus.update();
 	}
 
 	Nitpicker::Root _gui_nitpicker { _env, _heap, *this };
 
 	Main(Env &env) : _env(env)
 	{
-		_focus_reporter.generate([&] (Xml_generator &xml) {
-//			xml.attribute("label", "manager -> input"); });
-			xml.attribute("label", "wm -> "); });
-
 		_runtime_state.sigh(_runtime_state_handler);
 
 		_nitpicker.input()->sigh(_input_handler);
@@ -1039,7 +1088,12 @@ void Sculpt_manager::Main::_generate_runtime_config(Xml_generator &xml) const
 	/*
 	 * Update subsystem
 	 */
-	if (_sculpt_partition.valid() && !_prepare_in_progress() && _nic_state.ready())
+	bool const network_connectivity = (_nic_target.type == Nic_target::WIRED)
+	                               || (_nic_target.type == Nic_target::WIFI);
+
+	if (_sculpt_partition.valid() && !_prepare_in_progress()
+	 && _nic_state.ready() && network_connectivity)
+
 		xml.node("start", [&] () {
 			gen_update_start_content(xml); });
 

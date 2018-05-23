@@ -58,20 +58,91 @@ void Sculpt_manager::Network_dialog::_gen_access_point(Xml_generator &xml,
 }
 
 
+bool Sculpt_manager::Network_dialog::_selected_ap_visible() const
+{
+	unsigned cnt = 0;
+	bool selected_visible = false;
+	_access_points.for_each([&] (Access_point const &ap) {
+		if (cnt++ <= _max_visible_aps)
+			selected_visible |= _ap_item.selected(ap.bssid); });
+
+	return selected_visible;
+}
+
+
+bool Sculpt_manager::Network_dialog::need_keyboard_focus_for_passphrase() const
+{
+	if (_wifi_connection.state == Wifi_connection::CONNECTED)
+		return false;
+
+	bool result = false;
+	_access_points.for_each([&] (Access_point const &ap) {
+		if (_ap_item.selected(ap.bssid) && ap.protection == Access_point::WPA_PSK)
+			result = true; });
+
+	return result;
+}
+
+
 void Sculpt_manager::Network_dialog::_gen_access_point_list(Xml_generator &xml) const
 {
+	bool const selected_ap_visible = _selected_ap_visible();
+
 	unsigned cnt = 0;
 	_access_points.for_each([&] (Access_point const &ap) {
 
-		/* limit view to highest-quality access points */
-		if (cnt++ > 16)
+		if (cnt++ > _max_visible_aps)
 			return;
 
-		/* whenever the user has selected an access point, hide all others */
-		if (_ap_item.any_selected() && !_ap_item.selected(ap.bssid))
+		/*
+		 * Whenever the user has selected an access point, hide all others.
+		 * Should the selected AP disappear from the list, show all others.
+		 */
+		bool const selected = _ap_item.selected(ap.bssid);
+		if (selected_ap_visible && _ap_item.any_selected() && !selected)
 			return;
 
 		_gen_access_point(xml, ap);
+
+		if (!selected)
+			return;
+
+		bool const connected_to_selected_ap =
+			(selected && _wifi_connection.bssid == ap.bssid)
+			&& _wifi_connection.state == Wifi_connection::CONNECTED;
+
+		if (connected_to_selected_ap)
+			return;
+
+		if (ap.protection == Access_point::WPA_PSK) {
+			gen_named_node(xml, "label", "passphrase msg", [&] () {
+				xml.attribute("text", "Enter passphrase:"); });
+
+			gen_named_node(xml, "frame", "passphrase", [&] () {
+				xml.node("float", [&] () {
+					xml.attribute("west", "yes");
+					xml.node("label", [&] () {
+						xml.attribute("font", "title/regular");
+						xml.attribute("text", String<3*64>(" ", _wpa_passphrase));
+					});
+				});
+			});
+
+			if (_wpa_passphrase.suitable_for_connect()) {
+				xml.node("button", [&] () {
+
+					if (_wifi_connection.state == Wifi_connection::CONNECTING)
+						xml.attribute("selected", "yes");
+
+					/* suppress hover while connecting */
+					else
+						_connect_item.gen_button_attr(xml, "connect");
+
+					xml.node("label", [&] () {
+						xml.attribute("text", "Connect"); });
+				});
+			}
+		}
 	});
 
 	/*
@@ -176,8 +247,9 @@ void Sculpt_manager::Network_dialog::generate(Xml_generator &xml) const
 void Sculpt_manager::Network_dialog::hover(Xml_node hover)
 {
 	bool const changed =
-		_nic_item.match(hover, "vbox", "hbox", "button", "name") |
-		_ap_item .match(hover, "vbox", "frame", "vbox", "hbox", "name");
+		_nic_item    .match(hover, "vbox", "hbox", "button", "name") |
+		_ap_item     .match(hover, "vbox", "frame", "vbox", "hbox", "name") |
+		_connect_item.match(hover, "vbox", "frame", "vbox", "button", "name");
 
 	_nic_info.match(hover, "vbox", "frame", "name");
 
@@ -199,6 +271,9 @@ void Sculpt_manager::Network_dialog::click(Action &action)
 	} else {
 		_ap_item.toggle_selection_on_click();
 	}
+
+	if (_connect_item.hovered("connect"))
+		action.wifi_connect(selected_ap());
 
 	_dialog_generator.generate_dialog();
 }

@@ -21,7 +21,7 @@ namespace Sculpt_manager { struct Wifi_connection; }
 
 struct Sculpt_manager::Wifi_connection
 {
-	enum State { DISCONNECTED, CONNECTED };
+	enum State { DISCONNECTED, CONNECTING, CONNECTED };
 
 	State state;
 
