@@ -30,7 +30,7 @@ void Sculpt_manager::gen_depot_query_start_content(Xml_generator &xml)
 		gen_parent_rom_route(xml, "depot_query");
 		gen_parent_rom_route(xml, "ld.lib.so");
 		gen_parent_rom_route(xml, "vfs.lib.so");
-		gen_parent_rom_route(xml, "query", "config -> deploy/query");
+		gen_parent_rom_route(xml, "query", "config -> managed/depot_query");
 
 		gen_parent_route<Cpu_session>     (xml);
 		gen_parent_route<Pd_session>      (xml);

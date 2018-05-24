@@ -75,7 +75,7 @@ void Sculpt_manager::gen_wifi_drv_start_content(Xml_generator &xml)
 		gen_service_node<Rom_session>(xml, [&] () {
 			xml.attribute("label", "wlan_configuration");
 			xml.node("parent", [&] () {
-				xml.attribute("label", "config -> wlan.config"); }); });
+				xml.attribute("label", "config -> managed/wlan"); }); });
 
 		gen_service_node<Platform::Session>(xml, [&] () {
 			xml.node("parent", [&] () {

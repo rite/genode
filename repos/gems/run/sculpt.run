@@ -105,20 +105,24 @@ install_config {
 		<provides> <service name="File_system"/> </provides>
 		<config>
 			<content>
-				<rom name="fb_drv.config"/>
-				<rom name="nitpicker.config"/>
-				<rom name="fonts.config"/>
-				<rom name="input_filter.config"/>
+				<dir name="managed">
+					<rom name="fonts.config"         as="fonts"/>
+					<rom name="fb_drv.config"        as="fb_drv"/>
+					<rom name="input_filter.config"  as="input_filter"/>
+					<rom name="wlan.config"          as="wlan"/>
+					<rom name="installation"/>
+					<rom name="empty_runtime.config" as="runtime"/>
+					<inline name="depot_query"><query/></inline>
+				</dir>
+				<rom name="nitpicker.config"     as="nitpicker"/>
+				<rom name="numlock_remap.config" as="numlock_remap"/>
+				<rom name="leitzentrale.config"  as="leitzentrale"/>
+				<rom name="drivers.config"       as="drivers"/>
+				<rom name="manual_deploy.config" as="deploy"/>
 				<rom name="en_us.chargen"/>
 				<rom name="de.chargen"/>
 				<rom name="special.chargen"/>
-				<rom name="numlock_remap.config"/>
 				<rom name="vimrc"/>
-				<rom name="wlan.config"/>
-				<rom name="installation"/>
-				<dir name="leitzentrale">
-					<rom name="leitzentrale.config" as="config"/>
-				</dir>
 				<dir name="examples">
 					<dir name="vm">
 						<dir name="debian">
@@ -133,17 +137,7 @@ install_config {
 						</dir>
 					</dir>
 				</dir>
-				<dir name="drivers">
-					<rom name="drivers.config" as="config"/>
-				</dir>
-				<dir name="runtime">
-					<rom name="empty_runtime.config" as="config"/>
-				</dir>
-				<dir name="deploy">
-					<rom name="manual_deploy.config" as="manual"/>
-					<inline name="query"><query/></inline>
-				</dir>
-				<inline name="trace_subject_reporter.config">} [config_trace_subject_reporter_content] {
+				<inline name="trace_subject_reporter">} [config_trace_subject_reporter_content] {
 				</inline>
 				<inline name="system">} [config_system_content] {
 				</inline>
@@ -251,15 +245,10 @@ install_config {
 		<route>
 			<service name="LOG"> <child name="log"/> </service>
 			<service name="ROM" label="config">
-				<child name="config_fs_rom" label="drivers/config"/> </service>
-			<service name="ROM" label="input_filter.config">  <child name="config_fs_rom"/> </service>
-			<service name="ROM" label="numlock_remap.config"> <child name="config_fs_rom"/> </service>
-			<service name="ROM" label_suffix=".chargen">      <child name="config_fs_rom"/> </service>
-			<service name="ROM" label_suffix=".remap">        <child name="config_fs_rom"/> </service>
+				<child name="config_fs_rom" label="drivers"/> </service>
+			<service name="ROM" label_prefix="config -> "> <child name="config_fs_rom"/> </service>
 			<service name="ROM" label="capslock"> <child name="report_rom"/> </service>
 			<service name="ROM" label="numlock">  <child name="report_rom"/> </service>
-			<service name="ROM" label="system">   <child name="config_fs_rom"/> </service>
-			<service name="ROM" label_suffix="fb_drv.config"> <child name="config_fs_rom"/> </service>
 			<service name="Timer"> <child name="timer"/> </service>
 			<service name="Report"> <child name="fs_report"/> </service>
 			<any-service> <parent/> </any-service>
@@ -278,7 +267,7 @@ install_config {
 		<provides><service name="Nitpicker"/></provides>
 		<route>
 			<service name="ROM" label="config">
-				<child name="config_fs_rom" label="nitpicker.config"/> </service>
+				<child name="config_fs_rom" label="nitpicker"/> </service>
 			<service name="ROM" label="focus">
 				<child name="nit_focus"/> </service>
 			<service name="Report" label="keystate">
@@ -373,7 +362,7 @@ install_config {
 		<route>
 			<service name="ROM" label="leitzentrale"> <child name="report_rom"/> </service>
 			<service name="ROM" label="config">
-				<child name="config_fs_rom" label="leitzentrale/config"/> </service>
+				<child name="config_fs_rom" label="leitzentrale"/> </service>
 			<any-service> <parent/> </any-service>
 		</route>
 	</start>
@@ -420,12 +409,8 @@ install_config {
 		<resource name="RAM" quantum="32G"/>
 		<route>
 			<service name="ROM" label="config">
-				<child name="config_fs_rom" label="runtime/config"/> </service>
+				<child name="config_fs_rom" label="managed/runtime"/> </service>
 			<service name="ROM" label_prefix="config -> ">
-				<child name="config_fs_rom"/> </service>
-			<service name="ROM" label_suffix="-> vimrc">
-				<child name="config_fs_rom" label="vimrc"/> </service>
-			<service name="ROM" label="system">
 				<child name="config_fs_rom"/> </service>
 			<service name="ROM" label="capslock">
 				<child name="report_rom"/> </service>
@@ -558,7 +543,7 @@ append manual_deploy_config {
 <!--
 	<start name="fonts_fs" pkg="} [depot_user]/pkg/[current_pkg fonts_fs] {">
 		<route>
-			<service name="ROM" label="config"> <parent label="config -> fonts.config"/> </service>
+			<service name="ROM" label="config"> <parent label="config -> managed/fonts"/> </service>
 		</route>
 	</start>
 
@@ -603,37 +588,6 @@ append manual_deploy_config {
 		</route>
 	</start>
 	-->
-
-<!--
-	<start name="nic_drv" pkg="} [depot_user]/pkg/[current_pkg wifi] {">
-		<route>
-			<service name="Platform"> <parent label="wifi"/> </service>
-			<service name="Rtc">      <parent/> </service>
-			<service name="Report">   <parent/> </service>
-			<service name="RM">       <parent/> </service>
-			<service name="ROM" label="wlan_configuration">
-				<parent label="config -> wlan.config"/> </service>
-		</route>
-	</start>
--->
-
-<!--
-	<start name="nic_drv" pkg="} [depot_user]/pkg/[current_pkg ipxe_nic_drv] {">
-		<route>
-			<service name="Platform"> <parent label="nic"/> </service>
-			<service name="Report">   <parent/> </service>
-			<service name="RM">       <parent/> </service>
-		</route>
-	</start>
--->
-
-<!--
-	<start name="nic_router" pkg="} [depot_user]/pkg/[current_pkg nic_router-nat] {">
-		<route>
-			<service name="Nic"> <child name="nic_drv"/> </service>
-		</route>
-	</start>
--->
 
 <!--
 	<start name="vm_fs" pkg="} [depot_user]/pkg/[current_pkg chroot] {">

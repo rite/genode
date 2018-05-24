@@ -116,14 +116,12 @@ install_config {
 		<provides> <service name="File_system"/> </provides>
 		<config>
 			<content>
-				<rom name="fonts.config"/>
-				<dir name="runtime">
-					<inline name="config"><config/></inline>
+				<dir name="managed">
+					<rom name="fonts.config"         as="fonts"/>
+					<inline name="runtime"><config/></inline>
+					<inline name="depot_query"><query/></inline>
 				</dir>
-				<dir name="deploy">
-					<inline name="manual"></inline>
-					<inline name="query"><query/></inline>
-				</dir>
+				<inline name="deploy"></inline>
 			</content>
 			<default-policy root="/" writeable="yes"/>
 		</config>
@@ -222,6 +220,8 @@ install_config {
 		<route>
 			<service name="ROM" label="config">
 				<child name="leitzentrale_config"/> </service>
+			<service name="ROM" label_prefix="manager -> config -> ">
+				<child name="config_rom"/> </service>
 			<service name="Nitpicker"> <child name="nitpicker"/> </service>
 			<service name="Timer"> <child name="timer"/> </service>
 			<service name="File_system" label="config">
@@ -235,10 +235,10 @@ install_config {
 				<child name="usb_active_config_rom" label="usb_active_config"/> </service>
 			<service name="ROM" label_last="runtime/state">
 				<child name="report_fs_rom" label="runtime/state"/> </service>
-			<service name="ROM" label_last="deploy/manual">
+			<service name="ROM" label_last="deploy">
 				<child name="config_rom"/> </service>
-			<service name="ROM" label_last="fonts.config">
-				<child name="config_rom"/> </service>
+			<service name="ROM" label_last="managed/fonts">
+				<child name="config_rom" label="managed/fonts"/> </service>
 			<service name="ROM" label_prefix="manager -> report">
 				<child name="report_fs_rom"/> </service>
 			<service name="ROM" label="manager -> nitpicker_hover">
@@ -252,11 +252,9 @@ install_config {
 		<resource name="RAM" quantum="1G"/>
 		<route>
 			<service name="ROM" label="config">
-				<child name="config_rom" label="runtime/config"/> </service>
+				<child name="config_rom" label="runtime"/> </service>
 			<service name="ROM" label_prefix="config -> ">
 				<child name="config_rom"/> </service>
-			<service name="ROM" label_suffix="-> vimrc">
-				<child name="config_rom" label="vimrc"/> </service>
 			<service name="File_system" label="config">
 				<child name="config_fs" label="rw"/> </service>
 			<service name="File_system" label="report">

@@ -91,7 +91,7 @@ void Sculpt_manager::gen_terminal_start(Xml_generator &xml, Rom_name const &name
 		gen_named_node(xml, "service", Rom_session::service_name(), [&] () {
 			xml.attribute("label", "config");
 			xml.node("parent", [&] () {
-				xml.attribute("label", "config -> fonts.config"); }); });
+				xml.attribute("label", "config -> managed/fonts"); }); });
 
 		gen_service_node<Framebuffer::Session>(xml, [&] () {
 			gen_named_node(xml, "child", nit_fb_name); });

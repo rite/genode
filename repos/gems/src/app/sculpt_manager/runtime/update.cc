@@ -46,7 +46,7 @@ void Sculpt_manager::gen_update_start_content(Xml_generator &xml)
 		gen_parent_rom_route(xml, "liblzma.lib.so");
 		gen_parent_rom_route(xml, "pthread.lib.so");
 		gen_parent_rom_route(xml, "config",       "depot_download.config");
-		gen_parent_rom_route(xml, "installation", "config -> installation");
+		gen_parent_rom_route(xml, "installation", "config -> managed/installation");
 		gen_parent_route<Cpu_session>    (xml);
 		gen_parent_route<Pd_session>     (xml);
 		gen_parent_route<Rm_session>     (xml);

@@ -24,7 +24,7 @@ void Sculpt_manager::gen_nic_router_start_content(Xml_generator &xml)
 	xml.node("route", [&] () {
 		gen_parent_rom_route(xml, "nic_router");
 		gen_parent_rom_route(xml, "ld.lib.so");
-		gen_parent_rom_route(xml, "config", "config -> runtime/nic_router.config");
+		gen_parent_rom_route(xml, "config", "config -> managed/nic_router");
 		gen_parent_route<Cpu_session>     (xml);
 		gen_parent_route<Pd_session>      (xml);
 		gen_parent_route<Rm_session>      (xml);

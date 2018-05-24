@@ -23,13 +23,8 @@ void Sculpt_manager::gen_prepare_start_content(Xml_generator &xml, Prepare_versi
 
 	char const * const script =
 		"export VERSION=`cat /VERSION`\n"
-		"cp /rw/config/$VERSION/*                   /config/\n"
-		"cp /rw/config/$VERSION/subinit/*.config    /config/subinit/\n"
-		"cp /rw/config/$VERSION/deploy/*            /config/deploy/\n"
-		"cp /rw/config/$VERSION/leitzentrale/config /config/leitzentrale/\n"
-		"cp /rw/config/$VERSION/runtime/*.config    /config/runtime/\n"
-		"cp /rw/config/$VERSION/runtime/config      /config/runtime/\n"
-		"cp -r /config/examples/depot               /rw/\n";
+		"cp -r /rw/config/$VERSION/*  /config/\n"
+		"cp -r /config/examples/depot /rw/\n";
 
 	xml.node("config", [&] () {
 		xml.attribute("stdout", "/dev/null");

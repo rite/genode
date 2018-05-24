@@ -253,7 +253,7 @@ struct Sculpt_manager::Main : Input_event_handler,
 		_env, "report -> runtime/nic_router/state" };
 
 	Attached_rom_dataspace _manual_nic_router_config_rom {
-		_env, "config -> nic_router.config" };
+		_env, "config -> nic_router" };
 
 	Expanding_reporter _nic_router_config { _env, "config", "nic_router_config" };
 
@@ -375,7 +375,7 @@ struct Sculpt_manager::Main : Input_event_handler,
 
 	Depot_rom_state _depot_rom_state { 32*1024*1024 };
 
-	Attached_rom_dataspace _manual_deploy_rom { _env, "config -> deploy/manual" };
+	Attached_rom_dataspace _manual_deploy_rom { _env, "config -> deploy" };
 
 	Attached_rom_dataspace _blueprint_rom { _env, "report -> runtime/depot_query/blueprint" };
 
@@ -777,8 +777,8 @@ void Sculpt_manager::Main::_generate_nic_router_config()
 	_nic_router_config_up_to_date = true;
 
 	/*
-	 * If a manually managed 'config/nic_router.config' is provided, copy its
-	 * content to the effective config at 'config/runtime/nic_router.config'.
+	 * If a manually managed 'config/nic_router' is provided, copy its
+	 * content to the effective config at 'config/managed/nic_router'.
 	 * Note that attributes of the top-level node are not copied but the
 	 * 'verbose_domain_state' is set.
 	 */
