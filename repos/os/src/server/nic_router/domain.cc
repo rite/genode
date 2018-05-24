@@ -96,6 +96,9 @@ void Domain::ip_config(Ipv4_config const &new_ip_config)
 			log(__func__);
 		});
 	}
+	/* force report if configured */
+	try { _config.report().handle_config(); }
+	catch (Pointer<Report>::Invalid) { }
 }
 
 
