@@ -74,9 +74,10 @@ void Sculpt_manager::Network::_generate_nic_router_config()
 		xml.attribute("verbose_domain_state", "yes");
 
 		xml.node("report", [&] () {
-			xml.attribute("interval_sec", "5");
-			xml.attribute("bytes",        "yes");
-			xml.attribute("config",       "yes");
+			xml.attribute("interval_sec",    "5");
+			xml.attribute("bytes",           "yes");
+			xml.attribute("config",          "yes");
+			xml.attribute("config_triggers", "yes");
 		});
 
 		xml.node("default-policy", [&] () {
