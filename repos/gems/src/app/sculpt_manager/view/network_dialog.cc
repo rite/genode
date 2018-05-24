@@ -201,20 +201,30 @@ void Sculpt_manager::Network_dialog::generate(Xml_generator &xml) const
 
 						_nic_item.gen_button_attr(xml, id);
 
-						if (_used_nic.type == type)
+						if (_nic_target.type == type)
 							xml.attribute("selected", "yes");
 
 						xml.node("label", [&] () { xml.attribute("text", label); });
 					});
 				};
 
-				gen_nic_button("off",   Nic_target::OFF,   "Off");
-				gen_nic_button("local", Nic_target::LOCAL, "Local");
-				gen_nic_button("wired", Nic_target::WIRED, "Wired");
-				gen_nic_button("wifi",  Nic_target::WIFI,  "Wifi");
+				gen_nic_button("off", Nic_target::OFF, "Off");
+
+				/*
+				 * Allow interactive selection only if NIC-router configuration
+				 * is not manually maintained.
+				 */
+				if (_nic_target.managed() || _nic_target.local())
+					gen_nic_button("local", Nic_target::LOCAL, "Local");
+
+				if (_nic_target.managed() || _nic_target.wired())
+					gen_nic_button("wired", Nic_target::WIRED, "Wired");
+
+				if (_nic_target.managed() || _nic_target.wifi())
+					gen_nic_button("wifi",  Nic_target::WIFI,  "Wifi");
 			});
 
-			if (_used_nic.type == Nic_target::WIFI || _used_nic.type == Nic_target::WIRED) {
+			if (_nic_target.type == Nic_target::WIFI || _nic_target.type == Nic_target::WIRED) {
 				gen_named_node(xml, "frame", "nic_info", [&] () {
 					xml.node("vbox", [&] () {
 
@@ -224,7 +234,7 @@ void Sculpt_manager::Network_dialog::generate(Xml_generator &xml) const
 						 * the complete list of access points with the option
 						 * to select one.
 						 */
-						if (_used_nic.type == Nic_target::WIFI) {
+						if (_nic_target.type == Nic_target::WIFI) {
 							if (_wifi_connection.connected())
 								_gen_connected_ap(xml);
 							else
@@ -259,10 +269,10 @@ void Sculpt_manager::Network_dialog::hover(Xml_node hover)
 
 void Sculpt_manager::Network_dialog::click(Action &action)
 {
-	if (_nic_item.hovered("off"))   action.nic_target(Nic_target { Nic_target::OFF   });
-	if (_nic_item.hovered("local")) action.nic_target(Nic_target { Nic_target::LOCAL });
-	if (_nic_item.hovered("wired")) action.nic_target(Nic_target { Nic_target::WIRED });
-	if (_nic_item.hovered("wifi"))  action.nic_target(Nic_target { Nic_target::WIFI  });
+	if (_nic_item.hovered("off"))   action.nic_target(Nic_target::OFF);
+	if (_nic_item.hovered("local")) action.nic_target(Nic_target::LOCAL);
+	if (_nic_item.hovered("wired")) action.nic_target(Nic_target::WIRED);
+	if (_nic_item.hovered("wifi"))  action.nic_target(Nic_target::WIFI);
 
 	if (_wifi_connection.connected() && _ap_item.hovered(_wifi_connection.bssid)) {
 		action.wifi_disconnect();

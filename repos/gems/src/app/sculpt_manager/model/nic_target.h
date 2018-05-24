@@ -19,11 +19,20 @@
 namespace Sculpt_manager { struct Nic_target; }
 
 
-struct Sculpt_manager::Nic_target
+struct Sculpt_manager::Nic_target : Noncopyable
 {
-	enum Type { OFF, LOCAL, WIRED, WIFI };
+	enum Type { OFF, LOCAL, WIRED, WIFI } type { OFF };
 
-	Type type;
+	enum Policy { MANAGED, MANUAL } policy { MANAGED };
+
+	bool manual()  const { return policy == MANUAL; }
+	bool managed() const { return policy == MANAGED; }
+
+	bool local()   const { return type == LOCAL; }
+	bool wired()   const { return type == WIRED; }
+	bool wifi()    const { return type == WIFI; }
+
+	bool nic_router_needed() const { return type != OFF; }
 };
 
 #endif /* _MODEL__NIC_TARGET_H_ */

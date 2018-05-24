@@ -390,6 +390,8 @@ install_config {
 				<child name="report_fs_rom"/> </service>
 			<service name="ROM" label_prefix="manager -> report -> ">
 				<child name="report_fs_rom"/> </service>
+			<service name="ROM" label_prefix="manager -> config -> ">
+				<child name="config_fs_rom"/> </service>
 			<service name="ROM" label_prefix="config -> ">
 				<child name="config_fs_rom"/> </service>
 			<service name="ROM" label="trace_subjects">

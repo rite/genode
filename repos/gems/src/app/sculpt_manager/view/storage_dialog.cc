@@ -42,7 +42,8 @@ void Sculpt_manager::Storage_dialog::_gen_partition_operations(Xml_generator    
 
 	bool const expand_selected = _operation_item.selected("expand");
 
-	if (partition.file_system.accessible() && !format_selected && !expand_selected) {
+	if (partition.file_system.accessible() && !format_selected
+	 && !expand_selected && !expand_in_progress) {
 
 		if (!partition.check_in_progress && !partition.format_in_progress
 		 && partition.file_system.accessible() && !relabel_in_progress) {

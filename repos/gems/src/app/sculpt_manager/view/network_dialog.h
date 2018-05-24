@@ -31,7 +31,7 @@ struct Sculpt_manager::Network_dialog : Dialog
 
 	Dialog::Generator &_dialog_generator;
 
-	Nic_target           const &_used_nic;
+	Nic_target           const &_nic_target;
 	Access_points        const &_access_points;
 	Wifi_connection      const &_wifi_connection;
 	Nic_state            const &_nic_state;
@@ -42,7 +42,7 @@ struct Sculpt_manager::Network_dialog : Dialog
 	Hoverable_item  _nic_info     { };
 	Hoverable_item  _connect_item { }; /* confirm WPA passphrase */
 
-	bool ap_list_hovered() const { return _used_nic.type == Nic_target::WIFI
+	bool ap_list_hovered() const { return _nic_target.type == Nic_target::WIFI
 	                                   && _nic_info.hovered("nic_info"); }
 
 	/*
@@ -82,7 +82,7 @@ struct Sculpt_manager::Network_dialog : Dialog
 
 	struct Action : Interface
 	{
-		virtual void nic_target(Nic_target const &) = 0;
+		virtual void nic_target(Nic_target::Type) = 0;
 
 		virtual void wifi_connect(Access_point::Ssid) = 0;
 
@@ -93,14 +93,14 @@ struct Sculpt_manager::Network_dialog : Dialog
 
 	Network_dialog(Env                        &env,
 	               Dialog::Generator          &dialog_generator,
-	               Nic_target           const &used_nic,
+	               Nic_target           const &nic_target,
 	               Access_points        const &access_points,
 	               Wifi_connection      const &wifi_connection,
 	               Nic_state            const &nic_state,
 	               Blind_wpa_passphrase const &wpa_passphrase)
 	:
 		_env(env), _dialog_generator(dialog_generator),
-		_used_nic(used_nic), _access_points(access_points),
+		_nic_target(nic_target), _access_points(access_points),
 		_wifi_connection(wifi_connection), _nic_state(nic_state),
 		_wpa_passphrase(wpa_passphrase)
 	{ }

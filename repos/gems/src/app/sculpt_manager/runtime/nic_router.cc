@@ -14,74 +14,17 @@
 #include <runtime.h>
 
 
-void Sculpt_manager::gen_nic_router_uplink(Xml_generator &xml,
-                                           char const    *label)
-{
-	gen_named_node(xml, "domain", "uplink", [&] () {
-		xml.attribute("label", label);
-		xml.node("nat", [&] () {
-			xml.attribute("domain",    "default");
-			xml.attribute("tcp-ports", "1000");
-			xml.attribute("udp-ports", "1000");
-			xml.attribute("icmp-ids",  "1000");
-		});
-	});
-}
-
-
-void Sculpt_manager::gen_nic_router_start_content(Xml_generator &xml,
-                                                  Nic_target const &nic_target)
+void Sculpt_manager::gen_nic_router_start_content(Xml_generator &xml)
 {
 	gen_common_start_content(xml, "nic_router",
 	                         Cap_quota{300}, Ram_quota{10*1024*1024});
 
 	gen_provides<Nic::Session>(xml);
 
-	xml.node("config", [&] () {
-		xml.attribute("verbose_domain_state", "yes");
-
-		xml.node("report", [&] () {
-			xml.attribute("interval_sec", "5");
-			xml.attribute("bytes",        "yes");
-			xml.attribute("config",       "yes");
-		});
-
-		xml.node("default-policy", [&] () {
-			xml.attribute("domain", "default"); });
-
-		switch (nic_target.type) {
-		case Nic_target::WIRED: gen_nic_router_uplink(xml, "wired"); break;
-		case Nic_target::WIFI:  gen_nic_router_uplink(xml, "wifi");  break;
-		default: ;
-		}
-
-		gen_named_node(xml, "domain", "default", [&] () {
-			xml.attribute("interface", "10.0.1.1/24");
-
-			xml.node("dhcp-server", [&] () {
-				xml.attribute("ip_first",        "10.0.1.2");
-				xml.attribute("ip_last",         "10.0.1.200");
-				xml.attribute("dns_server_from", "uplink"); });
-
-			xml.node("tcp", [&] () {
-				xml.attribute("dst", "0.0.0.0/0");
-				xml.node("permit-any", [&] () {
-					xml.attribute("domain", "uplink"); }); });
-
-			xml.node("udp", [&] () {
-				xml.attribute("dst", "0.0.0.0/0");
-				xml.node("permit-any", [&] () {
-					xml.attribute("domain", "uplink"); }); });
-
-			xml.node("icmp", [&] () {
-				xml.attribute("dst", "0.0.0.0/0");
-				xml.attribute("domain", "uplink"); });
-		});
-	});
-
 	xml.node("route", [&] () {
 		gen_parent_rom_route(xml, "nic_router");
 		gen_parent_rom_route(xml, "ld.lib.so");
+		gen_parent_rom_route(xml, "config", "config -> runtime/nic_router.config");
 		gen_parent_route<Cpu_session>     (xml);
 		gen_parent_route<Pd_session>      (xml);
 		gen_parent_route<Rm_session>      (xml);

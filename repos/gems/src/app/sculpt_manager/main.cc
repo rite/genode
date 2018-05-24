@@ -85,9 +85,9 @@ struct Sculpt_manager::Main : Input_event_handler,
 	 ** Storage **
 	 *************/
 
-	Attached_rom_dataspace _block_devices_rom { _env, "block_devices" };
+	Attached_rom_dataspace _block_devices_rom { _env, "report -> drivers/block_devices" };
 
-	Attached_rom_dataspace _usb_active_config_rom { _env, "usb_active_config" };
+	Attached_rom_dataspace _usb_active_config_rom { _env, "report -> drivers/usb_active_config" };
 
 	Storage_devices _storage_devices { };
 
@@ -236,6 +236,8 @@ struct Sculpt_manager::Main : Input_event_handler,
 	Nic_target _nic_target { };
 	Nic_state  _nic_state  { };
 
+	bool _nic_router_config_up_to_date = false;
+
 	Wpa_passphrase _wpa_passphrase { };
 
 	bool _use_nic_drv  = false;
@@ -250,6 +252,13 @@ struct Sculpt_manager::Main : Input_event_handler,
 	Attached_rom_dataspace _nic_router_state_rom {
 		_env, "report -> runtime/nic_router/state" };
 
+	Attached_rom_dataspace _manual_nic_router_config_rom {
+		_env, "config -> nic_router.config" };
+
+	Expanding_reporter _nic_router_config { _env, "config", "nic_router_config" };
+
+	void _generate_nic_router_config();
+
 	Access_points _access_points { };
 
 	Wifi_connection _wifi_connection = Wifi_connection::disconnected_wifi_connection();
@@ -257,6 +266,7 @@ struct Sculpt_manager::Main : Input_event_handler,
 	void _handle_wlan_accesspoints();
 	void _handle_wlan_state();
 	void _handle_nic_router_state();
+	void _handle_manual_nic_router_config();
 
 	Signal_handler<Main> _wlan_accesspoints_handler {
 		_env.ep(), *this, &Main::_handle_wlan_accesspoints };
@@ -267,6 +277,9 @@ struct Sculpt_manager::Main : Input_event_handler,
 	Signal_handler<Main> _nic_router_state_handler {
 		_env.ep(), *this, &Main::_handle_nic_router_state };
 
+	Signal_handler<Main> _manual_nic_router_config_handler {
+		_env.ep(), *this, &Main::_handle_manual_nic_router_config };
+
 	Network_dialog _network_dialog {
 		_env, *this, _nic_target, _access_points, _wifi_connection, _nic_state,
 		_wpa_passphrase };
@@ -276,22 +289,21 @@ struct Sculpt_manager::Main : Input_event_handler,
 	/**
 	 * Network_dialog::Action interface
 	 */
-	void nic_target(Nic_target const &nic_target) override
+	void nic_target(Nic_target::Type const type) override
 	{
-		log("select NIC ", (int)nic_target.type);
-
 		/*
 		 * Start drivers on first use but never remove them to avoid
 		 * driver-restarting issues.
 		 */
-		if (nic_target.type == Nic_target::WIFI)
-			_use_wifi_drv = true;
+		if (type == Nic_target::WIFI)  _use_wifi_drv = true;
+		if (type == Nic_target::WIRED) _use_nic_drv  = true;
 
-		if (nic_target.type == Nic_target::WIRED)
-			_use_nic_drv = true;
-
-		_nic_target = nic_target;
-		_generate_runtime_config();
+		if (type != _nic_target.type) {
+			_nic_target.type = type;
+			_generate_nic_router_config();
+			_generate_runtime_config();
+			generate_dialog();
+		}
 	}
 
 	void wifi_connect(Access_point::Bssid bssid) override
@@ -363,7 +375,7 @@ struct Sculpt_manager::Main : Input_event_handler,
 
 	Depot_rom_state _depot_rom_state { 32*1024*1024 };
 
-	Attached_rom_dataspace _manual_deploy_rom { _env, "manual_deploy_config" };
+	Attached_rom_dataspace _manual_deploy_rom { _env, "config -> deploy/manual" };
 
 	Attached_rom_dataspace _blueprint_rom { _env, "report -> runtime/depot_query/blueprint" };
 
@@ -453,7 +465,19 @@ struct Sculpt_manager::Main : Input_event_handler,
 		});
 	}
 
-	Attached_rom_dataspace _runtime_state { _env, "runtime_state" };
+	Attached_rom_dataspace _runtime_state { _env, "report -> runtime/state" };
+
+	/**
+	 * Return true if specified child is present in the runtime subsystem
+	 */
+	bool _present_in_runtime(Start_name const &name)
+	{
+		bool present = false;
+		_runtime_state.xml().for_each_sub_node("child", [&] (Xml_node child) {
+			if (child.attribute_value("name", Start_name()) == name)
+				present = true; });
+		return present;
+	}
 
 	Expanding_reporter _runtime_config { _env, "config", "runtime_config" };
 
@@ -532,20 +556,22 @@ struct Sculpt_manager::Main : Input_event_handler,
 		 * Generate initial configurations
 		 */
 		wifi_disconnect();
+		_generate_nic_router_config();
 
 		/*
 		 * Subscribe to reports
 		 */
-		_block_devices_rom.sigh    (_storage_device_update_handler);
-		_usb_active_config_rom.sigh(_storage_device_update_handler);
-		_wlan_accesspoints_rom.sigh(_wlan_accesspoints_handler);
-		_wlan_state_rom.sigh       (_wlan_state_handler);
-		_nic_router_state_rom.sigh (_nic_router_state_handler);
-		_update_state_rom.sigh     (_update_state_handler);
-		_manual_deploy_rom.sigh    (_manual_deploy_handler);
-		_blueprint_rom.sigh        (_blueprint_handler);
-		_nitpicker_hover.sigh      (_nitpicker_hover_handler);
-		_hover_rom.sigh            (_hover_handler);
+		_block_devices_rom           .sigh(_storage_device_update_handler);
+		_usb_active_config_rom       .sigh(_storage_device_update_handler);
+		_wlan_accesspoints_rom       .sigh(_wlan_accesspoints_handler);
+		_wlan_state_rom              .sigh(_wlan_state_handler);
+		_nic_router_state_rom        .sigh(_nic_router_state_handler);
+		_update_state_rom            .sigh(_update_state_handler);
+		_manual_deploy_rom           .sigh(_manual_deploy_handler);
+		_blueprint_rom               .sigh(_blueprint_handler);
+		_nitpicker_hover             .sigh(_nitpicker_hover_handler);
+		_hover_rom                   .sigh(_hover_handler);
+		_manual_nic_router_config_rom.sigh(_manual_nic_router_config_handler);
 
 		/*
 		 * Import initial report content
@@ -553,6 +579,7 @@ struct Sculpt_manager::Main : Input_event_handler,
 		_handle_nitpicker_hover();
 		_handle_storage_devices_update();
 		_handle_deploy();
+		_handle_manual_nic_router_config();
 
 		_generate_runtime_config();
 
@@ -576,7 +603,7 @@ void Sculpt_manager::Main::_gen_download_status(Xml_generator &xml, Xml_node sta
 				gen_named_node(xml, "hbox", String<10>(count++), [&] () {
 					gen_named_node(xml, "float", "left", [&] () {
 						xml.attribute("west", "yes");
-						typedef String<64> Path;
+						typedef String<50> Path;
 						xml.node("label", [&] () {
 							xml.attribute("text", archive.attribute_value("path", Path()));
 							xml.attribute("font", "annotation/regular");
@@ -737,6 +764,94 @@ void Sculpt_manager::Main::_handle_storage_devices_update()
 }
 
 
+void Sculpt_manager::Main::_generate_nic_router_config()
+{
+	if ((_nic_target.wired() && !_present_in_runtime("nic_drv"))
+	 || (_nic_target.wifi()  && !_present_in_runtime("wifi_drv"))) {
+
+		/* defer NIC router reconfiguration until the needed uplink is present */
+		_nic_router_config_up_to_date = false;
+		return;
+	}
+
+	_nic_router_config_up_to_date = true;
+
+	/*
+	 * If a manually managed 'config/nic_router.config' is provided, copy its
+	 * content to the effective config at 'config/runtime/nic_router.config'.
+	 * Note that attributes of the top-level node are not copied but the
+	 * 'verbose_domain_state' is set.
+	 */
+	if (_nic_target.manual()) {
+		_nic_router_config.generate([&] (Xml_generator &xml) {
+			xml.attribute("verbose_domain_state", "yes");
+			Xml_node const manual_config = _manual_nic_router_config_rom.xml();
+			if (manual_config.content_size())
+				xml.append(manual_config.content_base(), manual_config.content_size());
+		});
+		return;
+	}
+
+	if (!_nic_target.nic_router_needed()) {
+		_nic_router_config.generate([&] (Xml_generator &xml) {
+			xml.attribute("verbose_domain_state", "yes"); });
+		return;
+	}
+
+	_nic_router_config.generate([&] (Xml_generator &xml) {
+		xml.attribute("verbose_domain_state", "yes");
+
+		xml.node("report", [&] () {
+			xml.attribute("interval_sec", "5");
+			xml.attribute("bytes",        "yes");
+			xml.attribute("config",       "yes");
+		});
+
+		xml.node("default-policy", [&] () {
+			xml.attribute("domain", "default"); });
+
+		if (_nic_target.type != Nic_target::LOCAL) {
+			gen_named_node(xml, "domain", "uplink", [&] () {
+				switch (_nic_target.type) {
+				case Nic_target::WIRED: xml.attribute("label", "wired"); break;
+				case Nic_target::WIFI:  xml.attribute("label", "wifi");  break;
+				default: break;
+				}
+				xml.node("nat", [&] () {
+					xml.attribute("domain",    "default");
+					xml.attribute("tcp-ports", "1000");
+					xml.attribute("udp-ports", "1000");
+					xml.attribute("icmp-ids",  "1000");
+				});
+			});
+		}
+
+		gen_named_node(xml, "domain", "default", [&] () {
+			xml.attribute("interface", "10.0.1.1/24");
+
+			xml.node("dhcp-server", [&] () {
+				xml.attribute("ip_first",        "10.0.1.2");
+				xml.attribute("ip_last",         "10.0.1.200");
+				xml.attribute("dns_server_from", "uplink"); });
+
+			xml.node("tcp", [&] () {
+				xml.attribute("dst", "0.0.0.0/0");
+				xml.node("permit-any", [&] () {
+					xml.attribute("domain", "uplink"); }); });
+
+			xml.node("udp", [&] () {
+				xml.attribute("dst", "0.0.0.0/0");
+				xml.node("permit-any", [&] () {
+					xml.attribute("domain", "uplink"); }); });
+
+			xml.node("icmp", [&] () {
+				xml.attribute("dst", "0.0.0.0/0");
+				xml.attribute("domain", "uplink"); });
+		});
+	});
+}
+
+
 void Sculpt_manager::Main::_handle_wlan_accesspoints()
 {
 	bool const initial_scan = !_wlan_accesspoints_rom.xml().has_sub_node("accesspoint");
@@ -772,6 +887,42 @@ void Sculpt_manager::Main::_handle_nic_router_state()
 	/* if the nic state becomes ready, consider spawning the update subsystem */
 	if (old_nic_state.ready() != _nic_state.ready())
 		_generate_runtime_config();
+}
+
+
+void Sculpt_manager::Main::_handle_manual_nic_router_config()
+{
+	_manual_nic_router_config_rom.update();
+
+	Xml_node const config = _manual_nic_router_config_rom.xml();
+
+	_nic_target.policy = config.has_type("empty")
+	                   ? Nic_target::MANAGED : Nic_target::MANUAL;
+
+	/* obtain uplink information from configuration */
+	Nic_target::Type target = Nic_target::LOCAL;
+	target = Nic_target::LOCAL;
+
+	if (!config.has_sub_node("domain"))
+		target = Nic_target::OFF;
+
+	config.for_each_sub_node("domain", [&] (Xml_node domain) {
+
+		/* skip non-uplink domains */
+		if (domain.attribute_value("name", String<16>()) != "uplink")
+			return;
+
+		if (domain.attribute_value("label", String<16>()) == "wired")
+			target = Nic_target::WIRED;
+
+		if (domain.attribute_value("label", String<16>()) == "wifi")
+			target = Nic_target::WIFI;
+	});
+
+	nic_target(target);
+	_generate_nic_router_config();
+	_generate_runtime_config();
+	generate_dialog();
 }
 
 
@@ -921,6 +1072,13 @@ void Sculpt_manager::Main::_handle_runtime_state()
 			reconfigure_runtime = true;
 		}
 	});
+
+	/*
+	 * Re-attempt NIC-router configuration as the uplink may have become
+	 * available in the meantime.
+	 */
+	if (_nic_target.nic_router_needed() && !_nic_router_config_up_to_date)
+		_generate_nic_router_config();
 
 	if (reconfigure_runtime)
 		_generate_runtime_config();
@@ -1083,7 +1241,7 @@ void Sculpt_manager::Main::_generate_runtime_config(Xml_generator &xml) const
 
 	if (_nic_target.type != Nic_target::OFF)
 		xml.node("start", [&] () {
-			gen_nic_router_start_content(xml, _nic_target); });
+			gen_nic_router_start_content(xml); });
 
 	/*
 	 * Update subsystem

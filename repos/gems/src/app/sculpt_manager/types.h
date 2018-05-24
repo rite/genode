@@ -38,6 +38,7 @@ namespace Sculpt_manager {
 	typedef String<32>  Rom_name;
 	typedef String<128> Path;
 	typedef String<36>  Start_name;
+	typedef String<64>  Label;
 
 	typedef Nitpicker::Point Point;
 

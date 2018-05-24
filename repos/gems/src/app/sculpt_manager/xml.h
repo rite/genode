@@ -72,7 +72,7 @@ namespace Sculpt_manager {
 
 	static inline void gen_parent_rom_route(Xml_generator  &xml,
 	                                        Rom_name const &name,
-	                                        Rom_name const &label)
+	                                        Label    const &label)
 	{
 		gen_service_node<Rom_session>(xml, [&] () {
 			xml.attribute("label_last", name);
