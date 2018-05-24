@@ -17,10 +17,15 @@
 #ifndef _GUI_H_
 #define _GUI_H_
 
-#include "types.h"
-#include "xml.h"
+/* Genode includes */
+#include <os/reporter.h>
+
+/* local includes */
+#include <types.h>
+#include <xml.h>
 
 namespace Sculpt_manager { struct Gui; }
+
 
 struct Sculpt_manager::Gui
 {
@@ -32,7 +37,7 @@ struct Sculpt_manager::Gui
 
 	struct Version { unsigned value; } version { 0 };
 
-	void _gen_menu_view_start_content(Xml_generator &xml, Label const &, Point pos) const;
+	void _gen_menu_view_start_content(Xml_generator &, Label const &, Point) const;
 
 	void _generate_config(Xml_generator &) const;
 
@@ -43,89 +48,5 @@ struct Sculpt_manager::Gui
 
 	Gui(Env &env) : _env(env) { }
 };
-
-
-void Sculpt_manager::Gui::_gen_menu_view_start_content(Xml_generator &xml,
-                                                       Label const &label,
-                                                       Point pos) const
-{
-	xml.attribute("version", version.value);
-
-	gen_common_start_content(xml, label, Cap_quota{150}, Ram_quota{8*1024*1024});
-
-	gen_named_node(xml, "binary", "menu_view");
-
-	xml.node("config", [&] () {
-		xml.attribute("xpos", pos.x());
-		xml.attribute("ypos", pos.y());
-		xml.node("libc", [&] () { xml.attribute("stderr", "/dev/log"); });
-		xml.node("report", [&] () { xml.attribute("hover", "yes"); });
-		xml.node("vfs", [&] () {
-			gen_named_node(xml, "tar", "menu_view_styles.tar");
-			gen_named_node(xml, "dir", "styles", [&] () {
-				gen_named_node(xml, "dir", "frame", [&] () {
-					gen_named_node(xml, "dir", "logo", [&] () {
-						gen_named_node(xml, "rom", "background.png", [&] () {
-							xml.attribute("label", "genode_logo.png"); }); }); }); });
-
-			gen_named_node(xml, "dir", "fonts", [&] () {
-				xml.node("fs", [&] () {
-					xml.attribute("label", "fonts"); }); });
-			gen_named_node(xml, "dir", "dev", [&] () {
-				xml.node("log",  [&] () { }); });
-		});
-	});
-
-	xml.node("route", [&] () {
-		gen_parent_rom_route(xml, "menu_view");
-		gen_parent_rom_route(xml, "ld.lib.so");
-		gen_parent_rom_route(xml, "vfs.lib.so");
-		gen_parent_rom_route(xml, "libc.lib.so");
-		gen_parent_rom_route(xml, "libm.lib.so");
-		gen_parent_rom_route(xml, "libpng.lib.so");
-		gen_parent_rom_route(xml, "zlib.lib.so");
-		gen_parent_rom_route(xml, "menu_view_styles.tar");
-		gen_parent_rom_route(xml, "genode_logo.png");
-		gen_parent_route<Cpu_session>         (xml);
-		gen_parent_route<Pd_session>          (xml);
-		gen_parent_route<Log_session>         (xml);
-		gen_parent_route<Timer::Session>      (xml);
-		gen_parent_route<Nitpicker::Session>  (xml);
-
-		gen_service_node<Rom_session>(xml, [&] () {
-			xml.attribute("label", "dialog");
-			xml.node("parent", [&] () { }); });
-
-		gen_service_node<Report::Session>(xml, [&] () {
-			xml.attribute("label", "hover");
-			xml.node("parent", [&] () { }); });
-
-		gen_service_node<::File_system::Session>(xml, [&] () {
-			xml.attribute("label", "fonts");
-			xml.node("parent", [&] () {
-				xml.attribute("label", "fonts"); }); });
-	});
-}
-
-
-void Sculpt_manager::Gui::_generate_config(Xml_generator &xml) const
-{
-	xml.node("parent-provides", [&] () {
-		gen_parent_service<Rom_session>(xml);
-		gen_parent_service<Cpu_session>(xml);
-		gen_parent_service<Pd_session>(xml);
-		gen_parent_service<Log_session>(xml);
-		gen_parent_service<Timer::Session>(xml);
-		gen_parent_service<Report::Session>(xml);
-		gen_parent_service<Nitpicker::Session>(xml);
-		gen_parent_service<::File_system::Session>(xml);
-	});
-
-	xml.node("start", [&] () {
-		_gen_menu_view_start_content(xml, "storage_view", Point(0, 0)); });
-
-	xml.node("start", [&] () {
-		_gen_menu_view_start_content(xml, "network_view", Point(0, 400)); });
-}
 
 #endif /* _GUI_H_ */

@@ -33,6 +33,8 @@ struct Sculpt_manager::Nic_target : Noncopyable
 	bool wifi()    const { return type == WIFI; }
 
 	bool nic_router_needed() const { return type != OFF; }
+
+	bool ready() const { return type == WIRED || type == WIFI; }
 };
 
 #endif /* _MODEL__NIC_TARGET_H_ */

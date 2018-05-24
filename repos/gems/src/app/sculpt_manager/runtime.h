@@ -22,6 +22,19 @@
 
 namespace Sculpt_manager {
 
+	struct Runtime_config_generator : Interface
+	{
+		virtual void generate_runtime_config() = 0;
+	};
+
+	struct Runtime_info : Interface
+	{
+		/**
+		 * Return true if specified child is present in the runtime subsystem
+		 */
+		virtual bool present_in_runtime(Start_name const &) const = 0;
+	};
+
 	void gen_chroot_start_content(Xml_generator &, Start_name const &,
 	                              Path const &, Writeable);
 

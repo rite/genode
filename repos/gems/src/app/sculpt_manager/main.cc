@@ -23,20 +23,21 @@
 
 /* local includes */
 #include <model/child_exit_state.h>
-#include <model/discovery_state.h>
-#include <view/storage_dialog.h>
-#include <view/network_dialog.h>
 #include <gui.h>
 #include <nitpicker.h>
 #include <runtime.h>
 #include <keyboard_focus.h>
+#include <network.h>
+#include <storage.h>
 
 namespace Sculpt_manager { struct Main; }
 
+
 struct Sculpt_manager::Main : Input_event_handler,
                               Dialog::Generator,
-                              Storage_dialog::Action,
-                              Network_dialog::Action
+                              Runtime_config_generator,
+                              Runtime_info,
+                              Storage::Target_user
 {
 	Env &_env;
 
@@ -81,132 +82,14 @@ struct Sculpt_manager::Main : Input_event_handler,
 	}
 
 
-	/*************
-	 ** Storage **
-	 *************/
-
-	Attached_rom_dataspace _block_devices_rom { _env, "report -> drivers/block_devices" };
-
-	Attached_rom_dataspace _usb_active_config_rom { _env, "report -> drivers/usb_active_config" };
-
-	Storage_devices _storage_devices { };
-
-	Ram_fs_state _ram_fs_state { };
-
-	Storage_target _sculpt_partition { };
-
-	Discovery_state _discovery_state { };
-
-	File_browser_version _file_browser_version { 0 };
-
-	Storage_dialog _storage_dialog {
-		_env, *this, _storage_devices, _ram_fs_state, _sculpt_partition };
-
-	void _handle_storage_devices_update();
-
-	Signal_handler<Main> _storage_device_update_handler {
-		_env.ep(), *this, &Main::_handle_storage_devices_update };
-
-	template <typename FN>
-	void _apply_partition(Storage_target const &target, FN const &fn)
-	{
-		_storage_devices.for_each([&] (Storage_device &device) {
-
-			if (target.device != device.label)
-				return;
-
-			device.for_each_partition([&] (Partition &partition) {
-
-				bool const whole_device = !target.partition.valid()
-				                       && !partition.number.valid();
-
-				bool const partition_matches = (device.label == target.device)
-				                            && (partition.number == target.partition);
-
-				if (whole_device || partition_matches) {
-					fn(partition);
-					_generate_runtime_config();
-				}
-			});
-		});
-	}
-
+	Storage _storage { _env, _heap, *this, *this, *this };
 
 	/**
-	 * Storage_dialog::Action interface
+	 * Storage::Target_user interface
 	 */
-	void format(Storage_target const &target) override
+	void use_storage_target(Storage_target const &target) override
 	{
-		_apply_partition(target, [&] (Partition &partition) {
-			partition.format_in_progress = true; });
-	}
-
-	void cancel_format(Storage_target const &target) override
-	{
-		_apply_partition(target, [&] (Partition &partition) {
-
-			if (partition.format_in_progress) {
-				partition.file_system.type   = File_system::UNKNOWN;
-				partition.format_in_progress = false;
-			}
-			_storage_dialog.reset_operation();
-		});
-	}
-
-	void expand(Storage_target const &target) override
-	{
-		_apply_partition(target, [&] (Partition &partition) {
-			partition.gpt_expand_in_progress = true; });
-	}
-
-	void cancel_expand(Storage_target const &target) override
-	{
-		_apply_partition(target, [&] (Partition &partition) {
-
-			if (partition.expand_in_progress()) {
-				partition.file_system.type       = File_system::UNKNOWN;
-				partition.gpt_expand_in_progress = false;
-				partition.fs_resize_in_progress  = false;
-			}
-			_storage_dialog.reset_operation();
-		});
-	}
-
-	void check(Storage_target const &target) override
-	{
-		_apply_partition(target, [&] (Partition &partition) {
-			partition.check_in_progress = true; });
-	}
-
-	void toggle_file_browser(Storage_target const &target) override
-	{
-		File_browser_version const orig_version = _file_browser_version;
-
-		if (target.ram_fs()) {
-			_ram_fs_state.inspected = !_ram_fs_state.inspected;
-			_file_browser_version.value++;
-		}
-
-		_apply_partition(target, [&] (Partition &partition) {
-			partition.file_system_inspected = !partition.file_system_inspected;
-			_file_browser_version.value++;
-		});
-
-		if (orig_version.value == _file_browser_version.value)
-			return;
-
-		_generate_runtime_config();
-	}
-
-	void toggle_default_storage_target(Storage_target const &target) override
-	{
-		_apply_partition(target, [&] (Partition &partition) {
-			partition.toggle_default_label(); });
-	}
-
-	void use(Storage_target const &target) override
-	{
-		_sculpt_partition = target;
+		_storage._sculpt_partition = target;
 
 		/* trigger loading of the configuration from the sculpt partition */
 		_prepare_version.value++;
@@ -216,135 +99,11 @@ struct Sculpt_manager::Main : Input_event_handler,
 
 		_children.apply_config(Xml_node("<config/>"));
 
-		_generate_runtime_config();
-	}
-
-	void reset_ram_fs() override
-	{
-		_ram_fs_state.ram_quota = Ram_fs_state::initial_ram();
-		_ram_fs_state.version.value++;
-
-		_storage_dialog.reset_operation();
-		_generate_runtime_config();
+		generate_runtime_config();
 	}
 
 
-	/*************
-	 ** Network **
-	 *************/
-
-	Nic_target _nic_target { };
-	Nic_state  _nic_state  { };
-
-	bool _nic_router_config_up_to_date = false;
-
-	Wpa_passphrase _wpa_passphrase { };
-
-	bool _use_nic_drv  = false;
-	bool _use_wifi_drv = false;
-
-	Attached_rom_dataspace _wlan_accesspoints_rom {
-		_env, "report -> runtime/wifi_drv/wlan_accesspoints" };
-
-	Attached_rom_dataspace _wlan_state_rom {
-		_env, "report -> runtime/wifi_drv/wlan_state" };
-
-	Attached_rom_dataspace _nic_router_state_rom {
-		_env, "report -> runtime/nic_router/state" };
-
-	Attached_rom_dataspace _manual_nic_router_config_rom {
-		_env, "config -> nic_router" };
-
-	Expanding_reporter _nic_router_config { _env, "config", "nic_router_config" };
-
-	void _generate_nic_router_config();
-
-	Access_points _access_points { };
-
-	Wifi_connection _wifi_connection = Wifi_connection::disconnected_wifi_connection();
-
-	void _handle_wlan_accesspoints();
-	void _handle_wlan_state();
-	void _handle_nic_router_state();
-	void _handle_manual_nic_router_config();
-
-	Signal_handler<Main> _wlan_accesspoints_handler {
-		_env.ep(), *this, &Main::_handle_wlan_accesspoints };
-
-	Signal_handler<Main> _wlan_state_handler {
-		_env.ep(), *this, &Main::_handle_wlan_state };
-
-	Signal_handler<Main> _nic_router_state_handler {
-		_env.ep(), *this, &Main::_handle_nic_router_state };
-
-	Signal_handler<Main> _manual_nic_router_config_handler {
-		_env.ep(), *this, &Main::_handle_manual_nic_router_config };
-
-	Network_dialog _network_dialog {
-		_env, *this, _nic_target, _access_points, _wifi_connection, _nic_state,
-		_wpa_passphrase };
-
-	Expanding_reporter _wlan_config { _env, "selected_network", "wlan_config" };
-
-	/**
-	 * Network_dialog::Action interface
-	 */
-	void nic_target(Nic_target::Type const type) override
-	{
-		/*
-		 * Start drivers on first use but never remove them to avoid
-		 * driver-restarting issues.
-		 */
-		if (type == Nic_target::WIFI)  _use_wifi_drv = true;
-		if (type == Nic_target::WIRED) _use_nic_drv  = true;
-
-		if (type != _nic_target.type) {
-			_nic_target.type = type;
-			_generate_nic_router_config();
-			_generate_runtime_config();
-			generate_dialog();
-		}
-	}
-
-	void wifi_connect(Access_point::Bssid bssid) override
-	{
-		_access_points.for_each([&] (Access_point const &ap) {
-			if (ap.bssid != bssid)
-				return;
-
-			_wifi_connection.ssid  = ap.ssid;
-			_wifi_connection.bssid = ap.bssid;
-			_wifi_connection.state = Wifi_connection::CONNECTING;
-
-			_wlan_config.generate([&] (Xml_generator &xml) {
-				xml.attribute("ssid", ap.ssid);
-				if (ap.protection == Access_point::WPA_PSK) {
-					xml.attribute("protection", "WPA-PSK");
-					String<128> const psk(_wpa_passphrase);
-					xml.attribute("psk", psk);
-				}
-			});
-		});
-	}
-
-	void wifi_disconnect() override
-	{
-		/*
-		 * Reflect state change immediately to the user interface even
-		 * if the wifi driver will take a while to perform the disconnect.
-		 */
-		_wifi_connection = Wifi_connection::disconnected_wifi_connection();
-
-		_wlan_config.generate([&] (Xml_generator &xml) {
-
-			/* generate attributes to ease subsequent manual tweaking */
-			xml.attribute("ssid", "");
-			xml.attribute("protection", "WPA-PSK");
-			xml.attribute("psk", "");
-		});
-
-		_generate_runtime_config();
-	}
+	Network _network { _env, _heap, *this, *this, *this };
 
 
 	/************
@@ -425,8 +184,8 @@ struct Sculpt_manager::Main : Input_event_handler,
 	template <typename FN>
 	void _apply_to_hovered_dialog(Hovered::Dialog dialog, FN const &fn)
 	{
-		if (dialog == Hovered::STORAGE) fn(_storage_dialog);
-		if (dialog == Hovered::NETWORK) fn(_network_dialog);
+		if (dialog == Hovered::STORAGE) fn(_storage.dialog);
+		if (dialog == Hovered::NETWORK) fn(_network.dialog);
 	}
 
 	void _handle_hover();
@@ -446,8 +205,8 @@ struct Sculpt_manager::Main : Input_event_handler,
 						xml.node("frame", [&] () {
 							xml.attribute("style", "logo"); }); }); });
 
-				_storage_dialog.generate(xml);
-				_network_dialog.generate(xml);
+				_storage.dialog.generate(xml);
+				_network.dialog.generate(xml);
 
 				gen_named_node(xml, "frame", "runtime", [&] () {
 					xml.node("vbox", [&] () {
@@ -468,9 +227,9 @@ struct Sculpt_manager::Main : Input_event_handler,
 	Attached_rom_dataspace _runtime_state { _env, "report -> runtime/state" };
 
 	/**
-	 * Return true if specified child is present in the runtime subsystem
+	 * Runtime_info interface
 	 */
-	bool _present_in_runtime(Start_name const &name)
+	bool present_in_runtime(Start_name const &name) const override
 	{
 		bool present = false;
 		_runtime_state.xml().for_each_sub_node("child", [&] (Xml_node child) {
@@ -481,9 +240,12 @@ struct Sculpt_manager::Main : Input_event_handler,
 
 	Expanding_reporter _runtime_config { _env, "config", "runtime_config" };
 
-	inline void _generate_runtime_config(Xml_generator &) const;
+	void _generate_runtime_config(Xml_generator &) const;
 
-	void _generate_runtime_config()
+	/**
+	 * Runtime_config_generator interface
+	 */
+	void generate_runtime_config() override
 	{
 		_runtime_config.generate([&] (Xml_generator &xml) {
 			_generate_runtime_config(xml); });
@@ -494,7 +256,7 @@ struct Sculpt_manager::Main : Input_event_handler,
 
 	void _handle_runtime_state();
 
-	Keyboard_focus _keyboard_focus { _env, _network_dialog, _wpa_passphrase };
+	Keyboard_focus _keyboard_focus { _env, _network.dialog, _network.wpa_passphrase };
 
 	/**
 	 * Input_event_handler interface
@@ -502,37 +264,16 @@ struct Sculpt_manager::Main : Input_event_handler,
 	void handle_input_event(Input::Event const &ev) override
 	{
 		if (ev.key_press(Input::BTN_LEFT)) {
-			if (_hovered_dialog == Hovered::STORAGE) _storage_dialog.click(*this);
-			if (_hovered_dialog == Hovered::NETWORK) _network_dialog.click(*this);
+			if (_hovered_dialog == Hovered::STORAGE) _storage.dialog.click(_storage);
+			if (_hovered_dialog == Hovered::NETWORK) _network.dialog.click(_network);
 		}
 
 		if (ev.key_release(Input::BTN_LEFT))
-			_storage_dialog.clack(*this);
+			_storage.dialog.clack(_storage);
 
-		/*
-		 * Insert WPA passphrase
-		 */
-		if (_keyboard_focus.target == Keyboard_focus::WPA_PASSPHRASE) {
+		if (_keyboard_focus.target == Keyboard_focus::WPA_PASSPHRASE)
 			ev.handle_press([&] (Input::Keycode, Codepoint code) {
-
-				enum { BACKSPACE = 8, ENTER = 10 };
-				if (code.value == BACKSPACE)
-					_wpa_passphrase.remove_last_character();
-				else if (code.value == ENTER)
-					wifi_connect(_network_dialog.selected_ap());
-				else if (code.value != 0)
-					_wpa_passphrase.append_character(code);
-
-				/*
-				 * Keep updating the passphase when pressing keys after
-				 * clicking the connect button once.
-				 */
-				if (_wifi_connection.state == Wifi_connection::CONNECTING)
-					wifi_connect(_wifi_connection.bssid);
-
-				generate_dialog();
-			});
-		}
+				_network.handle_key_press(code); });
 
 		if (ev.press())
 			_keyboard_focus.update();
@@ -553,38 +294,29 @@ struct Sculpt_manager::Main : Input_event_handler,
 		_handle_nitpicker_mode();
 
 		/*
-		 * Generate initial configurations
-		 */
-		wifi_disconnect();
-		_generate_nic_router_config();
-
-		/*
 		 * Subscribe to reports
 		 */
-		_block_devices_rom           .sigh(_storage_device_update_handler);
-		_usb_active_config_rom       .sigh(_storage_device_update_handler);
-		_wlan_accesspoints_rom       .sigh(_wlan_accesspoints_handler);
-		_wlan_state_rom              .sigh(_wlan_state_handler);
-		_nic_router_state_rom        .sigh(_nic_router_state_handler);
-		_update_state_rom            .sigh(_update_state_handler);
-		_manual_deploy_rom           .sigh(_manual_deploy_handler);
-		_blueprint_rom               .sigh(_blueprint_handler);
-		_nitpicker_hover             .sigh(_nitpicker_hover_handler);
-		_hover_rom                   .sigh(_hover_handler);
-		_manual_nic_router_config_rom.sigh(_manual_nic_router_config_handler);
+		_update_state_rom     .sigh(_update_state_handler);
+		_manual_deploy_rom    .sigh(_manual_deploy_handler);
+		_blueprint_rom        .sigh(_blueprint_handler);
+		_nitpicker_hover      .sigh(_nitpicker_hover_handler);
+		_hover_rom            .sigh(_hover_handler);
+
+		/*
+		 * Generate initial configurations
+		 */
+		_network.wifi_disconnect();
 
 		/*
 		 * Import initial report content
 		 */
 		_handle_nitpicker_hover();
-		_handle_storage_devices_update();
 		_handle_deploy();
-		_handle_manual_nic_router_config();
+		_storage._handle_storage_devices_update();
+		_network._handle_manual_nic_router_config();
 
-		_generate_runtime_config();
-
+		generate_runtime_config();
 		generate_dialog();
-
 		_gui.generate_config();
 	}
 };
@@ -702,227 +434,13 @@ void Sculpt_manager::Main::_handle_hover()
 
 void Sculpt_manager::Main::_handle_nitpicker_hover()
 {
-	if (!_discovery_state.discovery_in_progress())
+	if (!_storage._discovery_state.discovery_in_progress())
 		return;
 
 	_nitpicker_hover.update();
 
 	if (_nitpicker_hover.xml().attribute_value("active", false) == true)
-		_discovery_state.user_intervention = true;
-}
-
-
-void Sculpt_manager::Main::_handle_storage_devices_update()
-{
-	bool reconfigure_runtime = false;
-	{
-		_block_devices_rom.update();
-		Block_device_update_policy policy(_env, _heap, _storage_device_update_handler);
-		_storage_devices.update_block_devices_from_xml(policy, _block_devices_rom.xml());
-
-		_storage_devices.block_devices.for_each([&] (Block_device &dev) {
-
-			dev.process_part_blk_report();
-
-			if (dev.state == Storage_device::UNKNOWN) {
-				reconfigure_runtime = true; };
-		});
-	}
-
-	{
-		_usb_active_config_rom.update();
-		Usb_storage_device_update_policy policy(_env, _heap, _storage_device_update_handler);
-		Xml_node const config = _usb_active_config_rom.xml();
-		Xml_node const raw = config.has_sub_node("raw")
-		                   ? config.sub_node("raw") : Xml_node("<raw/>");
-
-		_storage_devices.update_usb_storage_devices_from_xml(policy, raw);
-
-		_storage_devices.usb_storage_devices.for_each([&] (Usb_storage_device &dev) {
-
-			dev.process_driver_report();
-			dev.process_part_blk_report();
-
-			if (dev.state == Storage_device::UNKNOWN) {
-				reconfigure_runtime = true; };
-		});
-	}
-
-	if (!_sculpt_partition.valid()) {
-
-		Storage_target const default_target =
-			_discovery_state.detect_default_target(_storage_devices);
-
-		if (default_target.valid())
-			use(default_target);
-	}
-
-	generate_dialog();
-
-	if (reconfigure_runtime)
-		_generate_runtime_config();
-}
-
-
-void Sculpt_manager::Main::_generate_nic_router_config()
-{
-	if ((_nic_target.wired() && !_present_in_runtime("nic_drv"))
-	 || (_nic_target.wifi()  && !_present_in_runtime("wifi_drv"))) {
-
-		/* defer NIC router reconfiguration until the needed uplink is present */
-		_nic_router_config_up_to_date = false;
-		return;
-	}
-
-	_nic_router_config_up_to_date = true;
-
-	/*
-	 * If a manually managed 'config/nic_router' is provided, copy its
-	 * content to the effective config at 'config/managed/nic_router'.
-	 * Note that attributes of the top-level node are not copied but the
-	 * 'verbose_domain_state' is set.
-	 */
-	if (_nic_target.manual()) {
-		_nic_router_config.generate([&] (Xml_generator &xml) {
-			xml.attribute("verbose_domain_state", "yes");
-			Xml_node const manual_config = _manual_nic_router_config_rom.xml();
-			if (manual_config.content_size())
-				xml.append(manual_config.content_base(), manual_config.content_size());
-		});
-		return;
-	}
-
-	if (!_nic_target.nic_router_needed()) {
-		_nic_router_config.generate([&] (Xml_generator &xml) {
-			xml.attribute("verbose_domain_state", "yes"); });
-		return;
-	}
-
-	_nic_router_config.generate([&] (Xml_generator &xml) {
-		xml.attribute("verbose_domain_state", "yes");
-
-		xml.node("report", [&] () {
-			xml.attribute("interval_sec", "5");
-			xml.attribute("bytes",        "yes");
-			xml.attribute("config",       "yes");
-		});
-
-		xml.node("default-policy", [&] () {
-			xml.attribute("domain", "default"); });
-
-		if (_nic_target.type != Nic_target::LOCAL) {
-			gen_named_node(xml, "domain", "uplink", [&] () {
-				switch (_nic_target.type) {
-				case Nic_target::WIRED: xml.attribute("label", "wired"); break;
-				case Nic_target::WIFI:  xml.attribute("label", "wifi");  break;
-				default: break;
-				}
-				xml.node("nat", [&] () {
-					xml.attribute("domain",    "default");
-					xml.attribute("tcp-ports", "1000");
-					xml.attribute("udp-ports", "1000");
-					xml.attribute("icmp-ids",  "1000");
-				});
-			});
-		}
-
-		gen_named_node(xml, "domain", "default", [&] () {
-			xml.attribute("interface", "10.0.1.1/24");
-
-			xml.node("dhcp-server", [&] () {
-				xml.attribute("ip_first",        "10.0.1.2");
-				xml.attribute("ip_last",         "10.0.1.200");
-				xml.attribute("dns_server_from", "uplink"); });
-
-			xml.node("tcp", [&] () {
-				xml.attribute("dst", "0.0.0.0/0");
-				xml.node("permit-any", [&] () {
-					xml.attribute("domain", "uplink"); }); });
-
-			xml.node("udp", [&] () {
-				xml.attribute("dst", "0.0.0.0/0");
-				xml.node("permit-any", [&] () {
-					xml.attribute("domain", "uplink"); }); });
-
-			xml.node("icmp", [&] () {
-				xml.attribute("dst", "0.0.0.0/0");
-				xml.attribute("domain", "uplink"); });
-		});
-	});
-}
-
-
-void Sculpt_manager::Main::_handle_wlan_accesspoints()
-{
-	bool const initial_scan = !_wlan_accesspoints_rom.xml().has_sub_node("accesspoint");
-
-	_wlan_accesspoints_rom.update();
-
-	/* suppress updating the list while the access-point list is hovered */
-	if (!initial_scan && _network_dialog.ap_list_hovered())
-		return;
-
-	Access_point_update_policy policy(_heap);
-	_access_points.update_from_xml(policy, _wlan_accesspoints_rom.xml());
-	generate_dialog();
-}
-
-
-void Sculpt_manager::Main::_handle_wlan_state()
-{
-	_wlan_state_rom.update();
-	_wifi_connection = Wifi_connection::from_xml(_wlan_state_rom.xml());
-	generate_dialog();
-}
-
-
-void Sculpt_manager::Main::_handle_nic_router_state()
-{
-	_nic_router_state_rom.update();
-
-	Nic_state const old_nic_state = _nic_state;
-	_nic_state = Nic_state::from_xml(_nic_router_state_rom.xml());
-	generate_dialog();
-
-	/* if the nic state becomes ready, consider spawning the update subsystem */
-	if (old_nic_state.ready() != _nic_state.ready())
-		_generate_runtime_config();
-}
-
-
-void Sculpt_manager::Main::_handle_manual_nic_router_config()
-{
-	_manual_nic_router_config_rom.update();
-
-	Xml_node const config = _manual_nic_router_config_rom.xml();
-
-	_nic_target.policy = config.has_type("empty")
-	                   ? Nic_target::MANAGED : Nic_target::MANUAL;
-
-	/* obtain uplink information from configuration */
-	Nic_target::Type target = Nic_target::LOCAL;
-	target = Nic_target::LOCAL;
-
-	if (!config.has_sub_node("domain"))
-		target = Nic_target::OFF;
-
-	config.for_each_sub_node("domain", [&] (Xml_node domain) {
-
-		/* skip non-uplink domains */
-		if (domain.attribute_value("name", String<16>()) != "uplink")
-			return;
-
-		if (domain.attribute_value("label", String<16>()) == "wired")
-			target = Nic_target::WIRED;
-
-		if (domain.attribute_value("label", String<16>()) == "wifi")
-			target = Nic_target::WIFI;
-	});
-
-	nic_target(target);
-	_generate_nic_router_config();
-	_generate_runtime_config();
-	generate_dialog();
+		_storage._discovery_state.user_intervention = true;
 }
 
 
@@ -950,7 +468,7 @@ void Sculpt_manager::Main::_handle_runtime_state()
 	bool reconfigure_runtime = false;
 
 	/* check for completed storage operations */
-	_storage_devices.for_each([&] (Storage_device &device) {
+	_storage._storage_devices.for_each([&] (Storage_device &device) {
 
 		device.for_each_partition([&] (Partition &partition) {
 
@@ -968,7 +486,7 @@ void Sculpt_manager::Main::_handle_runtime_state()
 
 					partition.check_in_progress = 0;
 					reconfigure_runtime = true;
-					_storage_dialog.reset_operation();
+					_storage.dialog.reset_operation();
 				}
 			}
 
@@ -987,7 +505,7 @@ void Sculpt_manager::Main::_handle_runtime_state()
 						device.rediscover();
 
 					reconfigure_runtime = true;
-					_storage_dialog.reset_operation();
+					_storage.dialog.reset_operation();
 				}
 			}
 
@@ -998,7 +516,7 @@ void Sculpt_manager::Main::_handle_runtime_state()
 					partition.fs_resize_in_progress = false;
 					reconfigure_runtime = true;
 					device.rediscover();
-					_storage_dialog.reset_operation();
+					_storage.dialog.reset_operation();
 				}
 			}
 
@@ -1010,7 +528,7 @@ void Sculpt_manager::Main::_handle_runtime_state()
 			if (exit_state.exited) {
 				device.rediscover();
 				reconfigure_runtime = true;
-				_storage_dialog.reset_operation();
+				_storage.dialog.reset_operation();
 			}
 		}
 
@@ -1028,7 +546,7 @@ void Sculpt_manager::Main::_handle_runtime_state()
 				});
 
 				reconfigure_runtime = true;
-				_storage_dialog.reset_operation();
+				_storage.dialog.reset_operation();
 			}
 		}
 
@@ -1055,7 +573,7 @@ void Sculpt_manager::Main::_handle_runtime_state()
 		 && child.has_sub_node("ram")
 		 && child.sub_node("ram").has_attribute("requested")) {
 
-			_ram_fs_state.ram_quota.value *= 2;
+			_storage._ram_fs_state.ram_quota.value *= 2;
 			reconfigure_runtime = true;
 			generate_dialog();
 		}
@@ -1077,11 +595,12 @@ void Sculpt_manager::Main::_handle_runtime_state()
 	 * Re-attempt NIC-router configuration as the uplink may have become
 	 * available in the meantime.
 	 */
-	if (_nic_target.nic_router_needed() && !_nic_router_config_up_to_date)
-		_generate_nic_router_config();
+	if (_network._nic_target.nic_router_needed()
+	 && !_network._nic_router_config_up_to_date)
+		_network._generate_nic_router_config();
 
 	if (reconfigure_runtime)
-		_generate_runtime_config();
+		generate_runtime_config();
 }
 
 
@@ -1113,113 +632,24 @@ void Sculpt_manager::Main::_generate_runtime_config(Xml_generator &xml) const
 		gen_parent_service<Rtc::Session>(xml);
 	});
 
-	xml.node("start", [&] () {
-		gen_ram_fs_start_content(xml, _ram_fs_state); });
-
-	auto part_blk_needed_for_use = [&] (Storage_device const &dev) {
-		return (_sculpt_partition.device == dev.label)
-		     && _sculpt_partition.partition.valid(); };
-
-	_storage_devices.block_devices.for_each([&] (Block_device const &dev) {
-	
-		if (dev.part_blk_needed_for_discovery()
-		 || dev.part_blk_needed_for_access()
-		 || part_blk_needed_for_use(dev))
-
-			xml.node("start", [&] () {
-				Storage_device::Label const parent { };
-				dev.gen_part_blk_start_content(xml, parent); }); });
-
-	_storage_devices.usb_storage_devices.for_each([&] (Usb_storage_device const &dev) {
-
-		if (dev.usb_block_drv_needed() || _sculpt_partition.device == dev.label)
-			xml.node("start", [&] () {
-				dev.gen_usb_block_drv_start_content(xml); });
-
-		if (dev.part_blk_needed_for_discovery()
-		 || dev.part_blk_needed_for_access()
-		 || part_blk_needed_for_use(dev))
-
-			xml.node("start", [&] () {
-				Storage_device::Label const driver = dev.usb_block_drv_name();
-				dev.gen_part_blk_start_content(xml, driver);
-		});
-	});
-
-	_storage_devices.for_each([&] (Storage_device const &device) {
-
-		device.for_each_partition([&] (Partition const &partition) {
-
-			Storage_target const target { device.label, partition.number };
-
-			if (partition.check_in_progress) {
-				xml.node("start", [&] () {
-					gen_fsck_ext2_start_content(xml, target); }); }
-
-			if (partition.format_in_progress) {
-				xml.node("start", [&] () {
-					gen_mkfs_ext2_start_content(xml, target); }); }
-
-			if (partition.fs_resize_in_progress) {
-				xml.node("start", [&] () {
-					gen_resize2fs_start_content(xml, target); }); }
-
-			if (partition.file_system.type != File_system::UNKNOWN) {
-				if (partition.file_system_inspected || target == _sculpt_partition)
-					xml.node("start", [&] () {
-						gen_fs_start_content(xml, target, partition.file_system.type); });
-
-				/*
-				 * Create alias so that the default file system can be referred
-				 * to as "default_fs_rw" without the need to know the name of the
-				 * underlying storage target.
-				 */
-				if (target == _sculpt_partition)
-					gen_named_node(xml, "alias", "default_fs_rw", [&] () {
-						xml.attribute("child", target.fs()); });
-			}
-
-		}); /* for each partition */
-
-		/* relabel partitions if needed */
-		if (device.relabel_in_progress())
-			xml.node("start", [&] () {
-				gen_gpt_relabel_start_content(xml, device); });
-
-		/* expand partitions if needed */
-		if (device.expand_in_progress())
-			xml.node("start", [&] () {
-				gen_gpt_expand_start_content(xml, device); });
-
-	}); /* for each device */
-
-	if (_sculpt_partition.ram_fs())
-		gen_named_node(xml, "alias", "default_fs_rw", [&] () {
-			xml.attribute("child", "ram_fs"); });
-
-	/*
-	 * Determine whether showing the file-system browser or not
-	 */
-	bool any_file_system_inspected = _ram_fs_state.inspected;
-	_storage_devices.for_each([&] (Storage_device const &device) {
-		device.for_each_partition([&] (Partition const &partition) {
-			any_file_system_inspected |= partition.file_system_inspected; }); });
+	_storage.gen_runtime_start_nodes(xml);
 
 	/*
 	 * Load configuration and update depot config on the sculpt partition
 	 */
-	if (_sculpt_partition.valid() && _prepare_in_progress())
+	if (_storage._sculpt_partition.valid() && _prepare_in_progress())
 		xml.node("start", [&] () {
 			gen_prepare_start_content(xml, _prepare_version); });
 
-	if (any_file_system_inspected)
-		gen_file_browser(xml, _storage_devices, _ram_fs_state, _file_browser_version);
+	if (_storage.any_file_system_inspected())
+		gen_file_browser(xml, _storage._storage_devices, _storage._ram_fs_state,
+		                 _storage._file_browser_version);
 
 	/*
 	 * Spawn chroot instances for accessing '/depot' and '/public'. The
 	 * chroot instances implicitly refer to the 'default_fs_rw'.
 	 */
-	if (_sculpt_partition.valid()) {
+	if (_storage._sculpt_partition.valid()) {
 
 		auto chroot = [&] (Start_name const &name, Path const &path, Writeable w) {
 			xml.node("start", [&] () {
@@ -1230,35 +660,19 @@ void Sculpt_manager::Main::_generate_runtime_config(Xml_generator &xml) const
 		chroot("public_rw", "/public", WRITEABLE);
 	}
 
-	/*
-	 * Network drivers and NIC router
-	 */
-	if (_use_nic_drv)
-		xml.node("start", [&] () { gen_nic_drv_start_content(xml); });
-
-	if (_use_wifi_drv)
-		xml.node("start", [&] () { gen_wifi_drv_start_content(xml); });
-
-	if (_nic_target.type != Nic_target::OFF)
-		xml.node("start", [&] () {
-			gen_nic_router_start_content(xml); });
+	_network.gen_runtime_start_nodes(xml);
 
 	/*
-	 * Update subsystem
+	 * Update
 	 */
-	bool const network_connectivity = (_nic_target.type == Nic_target::WIRED)
-	                               || (_nic_target.type == Nic_target::WIFI);
-
-	if (_sculpt_partition.valid() && !_prepare_in_progress()
-	 && _nic_state.ready() && network_connectivity)
-
+	if (_storage._sculpt_partition.valid() && !_prepare_in_progress() && _network.ready())
 		xml.node("start", [&] () {
 			gen_update_start_content(xml); });
 
 	/*
 	 * Deployment infrastructure
 	 */
-	if (_sculpt_partition.valid() && !_prepare_in_progress()) {
+	if (_storage._sculpt_partition.valid() && !_prepare_in_progress()) {
 
 		xml.node("start", [&] () {
 			gen_fs_rom_start_content(xml, "depot_rom", "depot",
@@ -1327,7 +741,7 @@ void Sculpt_manager::Main::_handle_deploy()
 		xml.attribute("arch", _arch);
 		_children.gen_installation_entries(xml); });
 
-	_generate_runtime_config();
+	generate_runtime_config();
 }
 
 
