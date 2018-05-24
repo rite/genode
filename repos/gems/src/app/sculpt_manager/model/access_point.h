@@ -40,6 +40,9 @@ struct Sculpt_manager::Access_point : List_model<Access_point>::Element
 
 	Access_point(Bssid const &bssid, Ssid const &ssid, Protection protection)
 	: bssid(bssid), ssid(ssid), protection(protection) { }
+
+	bool unprotected()   const { return protection == UNPROTECTED; }
+	bool wpa_protected() const { return protection == WPA_PSK; }
 };
 
 

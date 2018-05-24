@@ -61,12 +61,15 @@ void Sculpt_manager::Network_dialog::_gen_access_point(Xml_generator &xml,
 bool Sculpt_manager::Network_dialog::_selected_ap_visible() const
 {
 	unsigned cnt = 0;
-	bool selected_visible = false;
-	_access_points.for_each([&] (Access_point const &ap) {
-		if (cnt++ <= _max_visible_aps)
-			selected_visible |= _ap_item.selected(ap.bssid); });
+	return _for_each_ap([&] (Access_point const &ap) {
+		return (cnt++ < _max_visible_aps) && _ap_item.selected(ap.bssid); });
+}
 
-	return selected_visible;
+
+bool Sculpt_manager::Network_dialog::_selected_ap_unprotected() const
+{
+	return _for_each_ap([&] (Access_point const &ap) {
+		return _ap_item.selected(ap.bssid) && ap.unprotected(); });
 }
 
 
@@ -75,12 +78,8 @@ bool Sculpt_manager::Network_dialog::need_keyboard_focus_for_passphrase() const
 	if (_wifi_connection.state == Wifi_connection::CONNECTED)
 		return false;
 
-	bool result = false;
-	_access_points.for_each([&] (Access_point const &ap) {
-		if (_ap_item.selected(ap.bssid) && ap.protection == Access_point::WPA_PSK)
-			result = true; });
-
-	return result;
+	return _for_each_ap([&] (Access_point const &ap) {
+		return _ap_item.selected(ap.bssid) && ap.wpa_protected(); });
 }
 
 
@@ -91,7 +90,7 @@ void Sculpt_manager::Network_dialog::_gen_access_point_list(Xml_generator &xml) 
 	unsigned cnt = 0;
 	_access_points.for_each([&] (Access_point const &ap) {
 
-		if (cnt++ > _max_visible_aps)
+		if (cnt++ >= _max_visible_aps)
 			return;
 
 		/*
@@ -99,7 +98,7 @@ void Sculpt_manager::Network_dialog::_gen_access_point_list(Xml_generator &xml) 
 		 * Should the selected AP disappear from the list, show all others.
 		 */
 		bool const selected = _ap_item.selected(ap.bssid);
-		if (selected_ap_visible && _ap_item.any_selected() && !selected)
+		if (selected_ap_visible && !selected)
 			return;
 
 		_gen_access_point(xml, ap);
@@ -270,6 +269,10 @@ void Sculpt_manager::Network_dialog::click(Action &action)
 		_ap_item.reset();
 	} else {
 		_ap_item.toggle_selection_on_click();
+
+		/* immediately connect to unprotected access point when selected */
+		if (_ap_item.any_selected() && _selected_ap_unprotected())
+			action.wifi_connect(selected_ap());
 	}
 
 	if (_connect_item.hovered("connect"))

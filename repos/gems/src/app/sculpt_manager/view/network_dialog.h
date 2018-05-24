@@ -45,13 +45,27 @@ struct Sculpt_manager::Network_dialog : Dialog
 	bool ap_list_hovered() const { return _used_nic.type == Nic_target::WIFI
 	                                   && _nic_info.hovered("nic_info"); }
 
+	/*
+	 * \return true if at least one access point fulfils the condition 'COND_FN'
+	 */
+	template <typename COND_FN>
+	bool _for_each_ap(COND_FN const &cond_fn) const
+	{
+		bool result = false;
+		_access_points.for_each([&] (Access_point const &ap) {
+			result |= cond_fn(ap); });
+		return result;
+	}
+
 	Access_point::Bssid selected_ap() const { return _ap_item._selected; }
 
 	/* limit view to highest-quality access points */
-	unsigned const _max_visible_aps = 16;
+	unsigned const _max_visible_aps = 20;
 
 	/* determine whether the selected AP is present in access-point list */
 	bool _selected_ap_visible() const;
+
+	bool _selected_ap_unprotected() const;
 
 	void _gen_access_point(Xml_generator &, Access_point const &) const;
 	void _gen_connected_ap(Xml_generator &) const;
