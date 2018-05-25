@@ -72,8 +72,6 @@ void Sculpt_manager::Network::_generate_nic_router_config()
 
 	_nic_router_config.generate([&] (Xml_generator &xml) {
 		xml.attribute("verbose_domain_state", "yes");
-		xml.attribute("verbose_packets", "yes");
-		xml.attribute("verbose", "yes");
 
 		xml.node("report", [&] () {
 			xml.attribute("interval_sec",    "5");
