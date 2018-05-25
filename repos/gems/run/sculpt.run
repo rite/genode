@@ -642,8 +642,8 @@ close $fd
 # Create boot image
 #
 
-build { app/sculpt_manager }
+build { app/sculpt_manager server/nic_router }
 
-append boot_modules { sculpt_manager }
+append boot_modules { sculpt_manager nic_router }
 
 build_boot_image $boot_modules
