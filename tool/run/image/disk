@@ -74,7 +74,8 @@ proc run_image { {unused ""} } {
 	exec rm [run_dir].partition
 
 	# create partition table entry pointing to the content
-	catch { exec parted -a none [run_dir].img -- mkpart Fix GENODE ext2 [expr $first_sector]s ${last_sector}s }
+	catch { exec parted -a none [run_dir].img -- mkpart Fix "GENODE" ext2 [expr $first_sector]s ${last_sector}s }
+	#exec parted -a none [run_dir].img -- name 3 GENODE
 
 	# create hybrid MBR
 	exec echo -e "r\no\nh\n1\nn\n\ny\nn\no\nw\ny\n" | gdisk [run_dir].img

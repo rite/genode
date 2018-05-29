@@ -118,6 +118,7 @@ install_config {
 				<rom name="numlock_remap.config" as="numlock_remap"/>
 				<rom name="leitzentrale.config"  as="leitzentrale"/>
 				<rom name="drivers.config"       as="drivers"/>
+				<rom name="input_gen.config"     as="input_gen"/>
 				<rom name="manual_deploy.config" as="deploy"/>
 				<rom name="en_us.chargen"/>
 				<rom name="de.chargen"/>
@@ -249,6 +250,7 @@ install_config {
 			<service name="ROM" label_prefix="config -> "> <child name="config_fs_rom"/> </service>
 			<service name="ROM" label="capslock"> <child name="report_rom"/> </service>
 			<service name="ROM" label="numlock">  <child name="report_rom"/> </service>
+			<service name="Input" label="test">  <child name="input_gen"/> </service>
 			<service name="Timer"> <child name="timer"/> </service>
 			<service name="Report"> <child name="fs_report"/> </service>
 			<any-service> <parent/> </any-service>
@@ -260,6 +262,18 @@ install_config {
 			<service name="Usb"/>
 			<service name="Platform"/>
 		</provides>
+	</start>
+
+	<start name="input_gen" caps="90" priority="-1">
+		<resource name="RAM" quantum="4M"/>
+		<provides> <service name="Input"/> </provides>
+		<route>
+			<service name="ROM" label="config">
+				<child name="config_fs_rom" label="input_gen"/> </service>
+			<service name="Input"> <child name="drivers"/> </service>
+			<service name="Timer"> <child name="timer"/> </service>
+			<any-service> <parent/> </any-service>
+		</route>
 	</start>
 
 	<start name="nitpicker" caps="1000">
@@ -465,6 +479,9 @@ file copy -force [genode_dir]/repos/gems/run/sculpt/machine.vbox [run_dir]/genod
 file copy -force [genode_dir]/repos/gems/recipes/raw/drivers_managed-pc/drivers.config \
                  [run_dir]/genode/drivers.config
 
+file copy -force [genode_dir]/repos/gems/run/sculpt/input_gen.config \
+                 [run_dir]/genode/input_gen.config
+
 foreach file { en_us.chargen de.chargen special.chargen } {
 	file copy -force [genode_dir]/repos/os/src/server/input_filter/$file \
 	                 [run_dir]/genode/$file }
@@ -642,8 +659,10 @@ close $fd
 # Create boot image
 #
 
-build { app/sculpt_manager server/nic_router }
+build { app/sculpt_manager server/nic_router app/input_gen }
 
-append boot_modules { sculpt_manager nic_router }
+append boot_modules { sculpt_manager nic_router input_gen }
 
 build_boot_image $boot_modules
+
+run_genode_until forever
