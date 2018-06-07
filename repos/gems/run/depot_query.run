@@ -9,10 +9,14 @@ import_from_depot genodelabs/src/[base_src] \
                   genodelabs/src/init
 
 create_tar_from_depot_binaries [run_dir]/genode/depot.tar \
-                               genodelabs/pkg/test-fs_report
+                               genodelabs/pkg/test-fs_report \
+                               genodelabs/pkg/chroot \
 
 proc query_pkg {} {
 	return test-fs_report/[_current_depot_archive_version pkg test-fs_report] }
+
+proc chroot_pkg {} {
+	return chroot/[_current_depot_archive_version pkg chroot] }
 
 install_config {
 <config>
@@ -95,6 +99,12 @@ install_config {
 				<service name="Timer"> <parent/> </service>
 			</common_routes>
 			<start name="test" pkg="genodelabs/pkg/} [query_pkg] {"/>
+			<start name="chroot" pkg="genodelabs/pkg/} [chroot_pkg] {">
+				<route>
+					<service name="File_system"> <child name="test"/> </service>
+				</route>
+				<config> <default-policy path="/" writeable="no"/> </config>
+			</start>
 		</config>
 		<route>
 			<service name="ROM" label="blueprint"> <child name="report_rom"/> </service>
