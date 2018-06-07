@@ -294,6 +294,9 @@ struct Depot_query::Main
 				try { _query_blueprint(pkg, xml); }
 				catch (Xml_generator::Buffer_exceeded) {
 					throw; /* handled by 'generate' */ }
+				catch (Xml_node::Nonexistent_sub_node) {
+					Genode::error("invalid runtime config of '", pkg, "'");
+				}
 				catch (...) {
 					xml.node("missing", [&] () {
 						xml.attribute("path", pkg); }); }
