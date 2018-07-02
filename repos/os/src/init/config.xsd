@@ -27,6 +27,17 @@
   </xs:choice>
  </xs:complexType>
 
+ <xs:simpleType name="boolean">
+  <xs:restriction base="xs:string">
+   <xs:enumeration value="yes"/>
+   <xs:enumeration value="true"/>
+   <xs:enumeration value="on"/>
+   <xs:enumeration value="no"/>
+   <xs:enumeration value="false"/>
+   <xs:enumeration value="off"/>
+   </xs:restriction>
+ </xs:simpleType>
+
  <xs:element name="config">
   <xs:complexType>
    <xs:choice minOccurs="0" maxOccurs="unbounded">
@@ -67,14 +78,14 @@
 
     <xs:element name="report">
      <xs:complexType>
-      <xs:attribute name="ids" type="xs:string" />
-      <xs:attribute name="requested" type="xs:string" />
-      <xs:attribute name="provided" type="xs:string" />
-      <xs:attribute name="session_args" type="xs:string" />
-      <xs:attribute name="child_caps" type="xs:string" />
-      <xs:attribute name="child_ram" type="xs:string" />
-      <xs:attribute name="init_caps" type="xs:string" />
-      <xs:attribute name="init_ram" type="xs:string" />
+      <xs:attribute name="ids" type="boolean" />
+      <xs:attribute name="requested" type="boolean" />
+      <xs:attribute name="provided" type="boolean" />
+      <xs:attribute name="session_args" type="boolean" />
+      <xs:attribute name="child_caps" type="boolean" />
+      <xs:attribute name="child_ram" type="boolean" />
+      <xs:attribute name="init_caps" type="boolean" />
+      <xs:attribute name="init_ram" type="boolean" />
      </xs:complexType>
     </xs:element> <!-- "report" -->
 
