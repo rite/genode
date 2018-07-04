@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+	<xs:include schemaLocation="file://${GENODE_CONFIG_INC}"/>
+
+	<xs:element name="config">
+		<xs:complexType>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+
+				<xs:element name="policy">
+					<xs:complexType>
+						<xs:attribute name="label_prefix" type="Session_label" />
+						<xs:attribute name="label_suffix" type="Session_label" />
+						<xs:attribute name="label"        type="Session_label" />
+						<xs:attribute name="ip_addr"      type="Ipv4_address" />
+					</xs:complexType>
+				</xs:element><!-- policy -->
+
+			</xs:choice>
+			<xs:attribute name="verbose" type="Boolean" />
+			<xs:attribute name="mac"     type="Mac_address" />
+		</xs:complexType>
+	</xs:element><!-- config -->
+
+</xs:schema>
