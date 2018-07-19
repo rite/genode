@@ -49,6 +49,9 @@ class Genodefb :
 		void                  *_fb_base;
 		RTCRITSECT             _fb_lock;
 
+		PRUint32 _dx { 0 };
+		PRUint32 _dy { 0 };
+
 		void _clear_screen()
 		{
 			size_t const num_pixels = _fb_mode.width() * _virtual_fb_mode.height();
@@ -74,6 +77,9 @@ class Genodefb :
 		/* Return the next mode of the framebuffer */ 
 		int w() const { return _next_fb_mode.width(); }
 		int h() const { return _next_fb_mode.height(); }
+
+		int dx() const { return _dx; }
+		int dy() const { return _dy; }
 
 		void mode_sigh(Genode::Signal_context_capability sigh)
 		{
@@ -172,6 +178,9 @@ class Genodefb :
 			                                          _fb_mode.height());
 			Nitpicker::Area area_vm = Nitpicker::Area(width, height);
 
+			_dx = area_vm.w() < _fb_mode.width()  ? (_fb_mode.width()  - area_vm.w()) / 2 : 0;
+			_dy = area_vm.h() < _fb_mode.height() ? (_fb_mode.height() - area_vm.h()) / 2 : 0;
+
 			using namespace Genode;
 
 			typedef Pixel_rgb888 Pixel_src;
@@ -180,9 +189,9 @@ class Genodefb :
 			Texture<Pixel_src> texture((Pixel_src *)image, nullptr, area_vm);
 			Surface<Pixel_dst> surface((Pixel_dst *)_fb_base, area_fb);
 
-			Dither_painter::paint(surface, texture, Surface_base::Point(o_x, o_y));
+			Dither_painter::paint(surface, texture, Surface_base::Point(_dx + o_x, _dy + o_y));
 
-			_fb.refresh(o_x, o_y, area_vm.w(), area_vm.h());
+			_fb.refresh(_dx + o_x, _dy + o_y, area_vm.w(), area_vm.h());
 
 			return S_OK;
 		}
