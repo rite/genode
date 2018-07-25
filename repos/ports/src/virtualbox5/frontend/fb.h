@@ -84,6 +84,14 @@ class Genodefb :
 		{
 			Lock();
 			_next_fb_mode = _fb.mode();
+
+			_fb_mode = _next_fb_mode;
+			_virtual_fb_mode = Fb_Genode::Mode(w(), h(), Fb_Genode::Mode::RGB565);
+
+			_env.rm().detach(_fb_base);
+			_fb_base = _env.rm().attach(_fb.dataspace());
+
+			Genode::warning(__func__, ":", __LINE__, " w: ", _fb.mode().width(), " h: ", _fb.mode().height());
 			Unlock();
 		}
 
@@ -100,44 +108,7 @@ class Genodefb :
 		STDMETHODIMP NotifyChange(PRUint32 screen, PRUint32, PRUint32,
 		                          PRUint32 w, PRUint32 h) override
 		{
-			HRESULT result = E_FAIL;
-
-			Lock();
-
-			bool ok = (w <= (ULONG)_next_fb_mode.width()) &&
-			          (h <= (ULONG)_next_fb_mode.height());
-
-			if (ok) {
-				Genode::log("fb resize : [", screen, "] ",
-				            _virtual_fb_mode.width(), "x",
-				            _virtual_fb_mode.height(), " -> ",
-				            w, "x", h);
-
-				if ((w < (ULONG)_next_fb_mode.width()) ||
-				    (h < (ULONG)_next_fb_mode.height())) {
-					/* clear the old content around the new, smaller area. */
-				    _clear_screen();
-				}
-
-				_fb_mode = _next_fb_mode;
-
-				_virtual_fb_mode = Fb_Genode::Mode(w, h, Fb_Genode::Mode::RGB565);
-
-				_env.rm().detach(_fb_base);
-
-				_fb_base = _env.rm().attach(_fb.dataspace());
-
-				result = S_OK;
-
-			} else
-				Genode::log("fb resize : [", screen, "] ",
-				            _virtual_fb_mode.width(), "x",
-				            _virtual_fb_mode.height(), " -> ",
-				            w, "x", h, " ignored");
-
-			Unlock();
-
-			return result;
+			return S_OK;
 		}
 
 		STDMETHODIMP COMGETTER(Capabilities)(ComSafeArrayOut(FramebufferCapabilities_T, enmCapabilities)) override
