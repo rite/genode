@@ -30,6 +30,7 @@
 #include <keyboard_focus.h>
 #include <network.h>
 #include <storage.h>
+#include <framebuffer.h>
 #include <deploy.h>
 #include <graph.h>
 
@@ -158,6 +159,9 @@ struct Sculpt::Main : Input_event_handler,
 	Network _network { _env, _heap, *this, *this, _runtime_state, _pci_info };
 
 
+	Framebuffer _framebuffer { _env, _heap, *this };
+
+
 	/************
 	 ** Update **
 	 ************/
@@ -192,15 +196,16 @@ struct Sculpt::Main : Input_event_handler,
 	Signal_handler<Main> _hover_handler {
 		_env.ep(), *this, &Main::_handle_hover };
 
-	struct Hovered { enum Dialog { NONE, LOGO, STORAGE, NETWORK, RUNTIME } value; };
+	struct Hovered { enum Dialog { NONE, LOGO, STORAGE, NETWORK, RUNTIME, FRAMEBUFFER } value; };
 
 	Hovered::Dialog _hovered_dialog { Hovered::NONE };
 
 	template <typename FN>
 	void _apply_to_hovered_dialog(Hovered::Dialog dialog, FN const &fn)
 	{
-		if (dialog == Hovered::STORAGE) fn(_storage.dialog);
-		if (dialog == Hovered::NETWORK) fn(_network.dialog);
+		if (dialog == Hovered::STORAGE)     fn(_storage.dialog);
+		if (dialog == Hovered::NETWORK)     fn(_network.dialog);
+		if (dialog == Hovered::FRAMEBUFFER) fn(_framebuffer.dialog);
 	}
 
 	void _handle_hover();
@@ -226,6 +231,7 @@ struct Sculpt::Main : Input_event_handler,
 
 				_storage.dialog.generate(xml, storage_dialog_expanded);
 				_network.dialog.generate(xml);
+				_framebuffer.dialog.generate(xml);
 
 				gen_named_node(xml, "frame", "runtime", [&] () {
 					xml.node("vbox", [&] () {
@@ -297,6 +303,7 @@ struct Sculpt::Main : Input_event_handler,
 			if (_hovered_dialog == Hovered::STORAGE) _storage.dialog.click(_storage);
 			if (_hovered_dialog == Hovered::NETWORK) _network.dialog.click(_network);
 			if (_hovered_dialog == Hovered::RUNTIME) _network.dialog.click(_network);
+			if (_hovered_dialog == Hovered::FRAMEBUFFER) _framebuffer.dialog.click(_framebuffer);
 
 			if (_graph.hovered()) _graph.click();
 		}
@@ -310,14 +317,6 @@ struct Sculpt::Main : Input_event_handler,
 
 		if (ev.press())
 			_keyboard_focus.update();
-	}
-
-	Managed_config<Main> _fb_drv_config {
-		_env, "config", "fb_drv", *this, &Main::_handle_fb_drv_config };
-
-	void _handle_fb_drv_config(Xml_node)
-	{
-		_fb_drv_config.try_generate_manually_managed();
 	}
 
 	Attached_rom_dataspace _nitpicker_displays { _env, "displays" };
@@ -444,7 +443,7 @@ void Sculpt::Main::_handle_window_layout()
 	if (!_nitpicker.constructed())
 		return;
 
-	Framebuffer::Mode const mode = _nitpicker->mode();
+	::Framebuffer::Mode const mode = _nitpicker->mode();
 
 	typedef Nitpicker::Rect  Rect;
 	typedef Nitpicker::Area  Area;
@@ -544,7 +543,7 @@ void Sculpt::Main::_handle_nitpicker_mode()
 	if (!_nitpicker.constructed())
 		return;
 
-	Framebuffer::Mode const mode = _nitpicker->mode();
+	::Framebuffer::Mode const mode = _nitpicker->mode();
 
 	_handle_window_layout();
 
@@ -611,6 +610,7 @@ void Sculpt::Main::_handle_hover()
 		query_attribute<Top_level_frame>(hover, "dialog", "vbox", "frame", "name");
 
 	_hovered_dialog = Hovered::NONE;
+	if (top_level_frame == "framebuffer") _hovered_dialog = Hovered::FRAMEBUFFER;
 	if (top_level_frame == "network") _hovered_dialog = Hovered::NETWORK;
 	if (top_level_frame == "storage") _hovered_dialog = Hovered::STORAGE;
 	if (top_level_frame == "runtime") _hovered_dialog = Hovered::RUNTIME;
