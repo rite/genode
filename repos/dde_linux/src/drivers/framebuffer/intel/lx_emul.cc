@@ -142,7 +142,9 @@ Framebuffer::Driver::_preferred_mode(drm_connector *connector,
 
 		struct drm_display_mode *mode = nullptr, *tmp;
 		list_for_each_entry(tmp, &connector->modes, head) {
-			if (!mode || tmp->hdisplay > mode->hdisplay) mode = tmp;
+			if (!mode || tmp->hdisplay > mode->hdisplay) {
+				if (tmp->hdisplay <= 1920) mode = tmp;
+			}
 		};
 		return mode;
    	}
