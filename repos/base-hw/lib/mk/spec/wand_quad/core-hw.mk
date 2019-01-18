@@ -7,7 +7,13 @@
 #
 
 # add include paths
+ifeq ($(filter-out $(SPECS),wand_quad),)
 INC_DIR += $(REP_DIR)/src/core/spec/wand_quad
+endif
+
+ifeq ($(filter-out $(SPECS),apalis_imx6),)
+INC_DIR += $(REP_DIR)/src/core/spec/apalis_imx6
+endif
 
 # add C++ sources
 SRC_CC += platform_services.cc
