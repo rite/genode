@@ -1,4 +1,4 @@
-fLICENSE   := GPLv2
+LICENSE   := GPLv2
 VERSION   := git
 DOWNLOADS := sel4.git
 
