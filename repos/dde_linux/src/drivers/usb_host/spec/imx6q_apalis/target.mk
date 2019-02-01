@@ -1,7 +1,7 @@
 include $(REP_DIR)/src/drivers/usb_host/target.inc
 
-TARGET    = apalis_imx6_usb_host_drv
-REQUIRES  = apalis_imx6
+TARGET    = imx6q_apalis_usb_host_drv
+REQUIRES  = imx6q_apalis
 
 SRC_C    += usb/chipidea/ci_hdrc_imx.c
 SRC_C    += usb/chipidea/core.c
@@ -14,7 +14,7 @@ INC_DIR += $(REP_DIR)/src/drivers/usb_host/spec/arm
 INC_DIR += $(REP_DIR)/src/include/spec/arm
 
 SRC_CC  += spec/arm/platform.cc
-SRC_CC   += spec/apalis_imx6/platform.cc
+SRC_CC   += spec/imx6q_apalis/platform.cc
 
 CC_OPT   += -DCONFIG_USB_CHIPIDEA
 CC_OPT   += -DCONFIG_USB_CHIPIDEA_HOST

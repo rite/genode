@@ -1,35 +1,34 @@
 /*
- * \brief  MMIO and IRQ definitions of the Apalis iMX6.
- * \author Nikolay Golikov <nik@ksyslabs.org>
- * \author Josef Soentgen
- * \author Martin Stein
- * \date   2014-02-25
+ * \brief  MMIO and IRQ definitions of the i.MX6Quad Apalis
+ * \author Stefan Kalkowski
+ * \author Pirmin Duss
+ * \date   2019-01-25
  */
 
 /*
- * Copyright (C) 2014-2016 Ksys Labs LLC
- * Copyright (C) 2014-2017 Genode Labs GmbH
+ * Copyright (C) 2019 Genode Labs GmbH
+ * Copyright (C) 2019 gapfruit AG
  *
  * This file is part of the Genode OS framework, which is distributed
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _INCLUDE__DRIVERS__DEFS__APALIS_IMX6_H_
-#define _INCLUDE__DRIVERS__DEFS__APALIS_IMX6_H_
+#ifndef _INCLUDE__DRIVERS__DEFS__IMX6Q_APALIS_H_
+#define _INCLUDE__DRIVERS__DEFS__IMX6Q_APALIS_H_
 
 /* Genode includes */
 #include <drivers/defs/imx6.h>
 
-namespace Apalis_imx6 {
+namespace Imx6q_apalis {
 
 	using namespace Imx6;
 
 	enum {
 		/* normal RAM */
-		RAM0_BASE = 0x10000000,
-		RAM0_SIZE = 0x80000000,
+		RAM_BASE = 0x10000000,
+		RAM_SIZE = 0x80000000,
 
-		/* device IO memory */
+		/* device IO memory 
 		MMIO_BASE = 0x00000000,
 		MMIO_SIZE = 0x10000000,
 
@@ -37,33 +36,34 @@ namespace Apalis_imx6 {
 		UART_1_MMIO_BASE = 0x02020000,
 		UART_1_MMIO_SIZE = 0x00004000,
 
-		/* timer */
+		timer 
 		EPIT_2_IRQ       = 89,
 		EPIT_2_MMIO_BASE = 0x020d4000,
 		EPIT_2_MMIO_SIZE = 0x00004000,
 
-		/* ARM IP Bus control */
+		ARM IP Bus control 
 		AIPS_1_MMIO_BASE = 0x0207c000,
 		AIPS_1_MMIO_SIZE = 0x00004000,
 		AIPS_2_MMIO_BASE = 0x0217c000,
 		AIPS_2_MMIO_SIZE = 0x00004000,
 
-		/* CPU */
+		CPU 
 		CORTEX_A9_PRIVATE_MEM_BASE  = 0x00a00000,
 		CORTEX_A9_PRIVATE_MEM_SIZE  = 0x00002000,
-		CORTEX_A9_PRIVATE_TIMER_CLK = 500000000, /* timer clk runs half the CPU freq */
+		CORTEX_A9_PRIVATE_TIMER_CLK = 500000000,  timer clk runs half the CPU freq 
 		CORTEX_A9_PRIVATE_TIMER_DIV = 100,
 
-		/* L2 cache controller */
+		L2 cache controller 
 		PL310_MMIO_BASE = 0x00a02000,
 		PL310_MMIO_SIZE = 0x00001000,
 
-		/* System reset controller */
+		System reset controller 
 		SRC_MMIO_BASE = 0x20d8000,
 
-		/* CPU cache */
+		CPU cache
 		CACHE_LINE_SIZE_LOG2 = 5,
+		*/
 	};
 };
 
-#endif /* _INCLUDE__DRIVERS__DEFS__APALIS_IMX6_H_ */
+#endif /* _INCLUDE__DRIVERS__DEFS__IMX6Q_APALIS_H_ */

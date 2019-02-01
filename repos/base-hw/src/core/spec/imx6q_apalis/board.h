@@ -1,29 +1,30 @@
 /*
  * \brief  Board driver
  * \author Stefan Kalkowski
- * \author Martin Stein
- * \date   2014-02-25
+ * \author Pirmin Duss
+ * \date   2019-01-25
  */
 
 /*
- * Copyright (C) 2014-2017 Genode Labs GmbH
+ * Copyright (C) 2019 Genode Labs GmbH
+ * Copyright (C) 2019 gapfruit AG
  *
  * This file is part of the Genode OS framework, which is distributed
  * under the terms of the GNU Affero General Public License version 3.
  */
 
-#ifndef _CORE__SPEC__APALIS_IMX6__BOARD_H_
-#define _CORE__SPEC__APALIS_IMX6__BOARD_H_
+#ifndef _CORE__SPEC__IMX6Q_APALIS__BOARD_H_
+#define _CORE__SPEC__IMX6Q_APALIS__BOARD_H_
 
 /* base includes */
-#include <drivers/defs/apalis_imx6.h>
+#include <drivers/defs/imx6q_apalis.h>
 #include <drivers/uart/imx.h>
 
 #include <hw/spec/arm/cortex_a9.h>
 #include <hw/spec/arm/pl310.h>
 
 namespace Board {
-	using namespace Apalis_imx6;
+	using namespace Imx6q_apalis;
 	using Cpu_mmio = Hw::Cortex_a9_mmio<CORTEX_A9_PRIVATE_MEM_BASE>;
 	using L2_cache = Hw::Pl310;
 	using Serial   = Genode::Imx_uart;
@@ -38,4 +39,4 @@ namespace Board {
 	L2_cache & l2_cache();
 }
 
-#endif /* _CORE__SPEC__APALIS_IMX6__BOARD_H_ */
+#endif /* _CORE__SPEC__IMX6Q_APALIS__BOARD_H_ */
