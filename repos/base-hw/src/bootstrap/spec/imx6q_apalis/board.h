@@ -44,7 +44,6 @@ struct Board::L2_cache : Hw::Pl310
 {
 	L2_cache(Genode::addr_t mmio) : Hw::Pl310(mmio)
 	{
-		// disable();
 		Aux::access_t aux = 0;
 		Aux::Full_line_of_zero::set(aux, true);
 		Aux::Associativity::set(aux, Aux::Associativity::WAY_16);
@@ -73,7 +72,6 @@ struct Board::L2_cache : Hw::Pl310
 		Prefetch_ctrl::Data_prefetch::set(prefetch, 1);
 		Prefetch_ctrl::Inst_prefetch::set(prefetch, 1);
 		write<Prefetch_ctrl>(prefetch | 0xF);
-		// enable();
 	}
 
 	using Hw::Pl310::invalidate;
