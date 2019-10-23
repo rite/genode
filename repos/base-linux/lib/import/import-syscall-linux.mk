@@ -1,4 +1,6 @@
+HOST_INC_DIR += $(dir $(CUSTOM_HOST_CC))/../arm-linux-gnueabi/$(shell /usr/local/genode/tool/current/bin/genode-arm-gcc -dumpmachine)
 HOST_INC_DIR += $(dir $(call select_from_repositories,src/lib/syscall/linux_syscalls.h))
+HOST_INC_DIR += $(dir $(CUSTOM_HOST_CC))/../arm-linux-gnueabi/sysroot/usr/include
 HOST_INC_DIR += /usr/include
 
 # needed for Ubuntu >= 11.04
