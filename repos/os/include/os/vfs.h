@@ -535,8 +535,11 @@ class Genode::File_content
 
 			for (size_t n = 0; ; n++) {
 
+				if (n == _buffer.size)
+					break;
+
 				char const c = *src++;
-				bool const end_of_data = (c == 0 || n == _buffer.size);
+				bool const end_of_data = (c == 0);
 				bool const end_of_line = (c == '\n');
 
 				if (!end_of_data && !end_of_line) {
