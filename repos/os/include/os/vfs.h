@@ -526,9 +526,6 @@ class Genode::File_content
 		template <typename STRING, typename FN>
 		void for_each_line(FN const &fn) const
 		{
-			if (_buffer.size == 0)
-				return;
-
 			char const *src           = _buffer.ptr;
 			char const *curr_line     = src;
 			size_t      curr_line_len = 0;
