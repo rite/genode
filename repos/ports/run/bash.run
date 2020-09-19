@@ -13,6 +13,8 @@ import_from_depot [depot_user]/src/[base_src] \
                   [depot_user]/src/vfs_pipe \
                   [depot_user]/src/fs_rom
 
+build { test/fs_rom_delete }
+
 # write default vimrc file
 set vimrc_fd [open [run_dir]/genode/vimrc w]
 puts $vimrc_fd {
@@ -105,6 +107,14 @@ install_config {
 		</route>
 	</start>
 
+	<start name="test-fs_rom_delete">
+		<resource name="RAM" quantum="2M"/>
+		<route>
+			<service name="ROM" label="test.txt"> <child name="vfs_rom" label="tmp/test.txt"/> </service>
+			<any-service> <parent/> <any-child/> </any-service>
+		</route>
+	</start>
+
 	<start name="/bin/bash" caps="1000">
 		<resource name="RAM" quantum="30M" />
 		<config ld_verbose="yes">
@@ -127,6 +137,6 @@ install_config {
 
 build { lib/ld test/fork test/execve }
 
-build_boot_image { ld.lib.so libc.lib.so libm.lib.so vfs.lib.so posix.lib.so }
+build_boot_image { ld.lib.so libc.lib.so libm.lib.so vfs.lib.so posix.lib.so test-fs_rom_delete }
 
 run_genode_until forever
