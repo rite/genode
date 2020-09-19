@@ -304,7 +304,13 @@ class Fs_rom::Rom_session_component : public  Rpc_object<Rom_session>
 			catch (Watch_failed) { }
 
 			try { return _read_dataspace(update_only); }
-			catch (Lookup_failed)     { log(_file_path, " ROM file is missing"); }
+			catch (Lookup_failed)     { log(_file_path, " ROM file is missing");
+				if (_file_size > 0) {
+					memset(_file_ds.local_addr<char>(), 0x00, _file_size);
+					_file_size = 0;
+					Signal_transmitter(_sigh).submit();
+				}
+			}
 			catch (Invalid_handle)    { error(_file_path, ": invalid handle"); }
 			catch (Invalid_name)      { error(_file_path, ": invalid name"); }
 			catch (Permission_denied) { error(_file_path, ": permission denied"); }
