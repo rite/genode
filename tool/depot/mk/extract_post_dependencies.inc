@@ -78,28 +78,32 @@ GEN_MISSING_PORTS_MK := $(DEPOT_DIR)/var/gen_missing_ports.mk
 # wether to invoke sub-makes with '--quiet'
 QUIET = $(if $(VERBOSE),--quiet)
 
+_archive_properties = $(foreach A,${ARCHIVES($1)},\
+	                      target=$(call versioned_archive,$A); \
+	                      content_mk=$(call content_mk_file,$1,$A); \
+	                      rep_dir=$(call rep_dir_of_archive,$1,$A); \
+	                      echo "ARCHIVES($1) += $$target"; \
+	                      echo "CONTENT_MK($$target) := $$content_mk"; \
+	                      echo "REP_DIR($$target) := $$rep_dir"; )
+
 #
 # Invoke sub-make to create or update missing-ports file
 #
 update_missing_ports_file: checked_versions_defined checked_no_uncategorized
 	$(VERBOSE)mkdir -p $(dir $(GEN_MISSING_PORTS_MK))
 	$(VERBOSE)( echo -e "all:\n"; \
-	            echo -e "MAKE := $(MAKE)\n"; \
-	            $(foreach TYPE,api src raw pkg,\
-	                $(foreach A,${ARCHIVES(${TYPE})},\
-	                   target=$(call versioned_archive,$A); \
-	                   content_mk=$(call content_mk_file,$(TYPE),$A); \
-	                   rep_dir=$(call rep_dir_of_archive,$(TYPE),$A); \
-	                   echo "ARCHIVES(${TYPE}) += $$target"; \
-	                   echo "CONTENT_MK($$target) := $$content_mk"; \
-	                   echo "REP_DIR($$target) := $$rep_dir"; \
-	            ) ) \
-	            echo -e ""; \
+	            echo -e "MAKE := $(MAKE)\n") > $(GEN_MISSING_PORTS_MK)
+	$(VERBOSE)( $(call _archive_properties,api) ) >> $(GEN_MISSING_PORTS_MK)
+	$(VERBOSE)( $(call _archive_properties,src) ) >> $(GEN_MISSING_PORTS_MK)
+	$(VERBOSE)( $(call _archive_properties,raw) ) >> $(GEN_MISSING_PORTS_MK)
+	$(VERBOSE)( $(call _archive_properties,pkg) ) >> $(GEN_MISSING_PORTS_MK)
+	$(VERBOSE)( echo -e ""; \
 	            $(foreach A,${ARCHIVES(pkg)},\
 	               $(foreach DEP,$(call pkg_pkg_archives,$A),\
 	                  echo -e "$(call versioned_archive,$A) :" \
 	                          "$(call versioned_archive,$(DEP))";)) \
-	            echo -e ""; \
+	          ) >> $(GEN_MISSING_PORTS_MK)
+	$(VERBOSE)( echo -e ""; \
 	            echo -e "\$${ARCHIVES(src)} : \$${ARCHIVES(api)}"; \
 	            echo -e "\$${ARCHIVES(pkg)} : \$${ARCHIVES(api)}"; \
 	            echo -e "\$${ARCHIVES(pkg)} : \$${ARCHIVES(src)}"; \
@@ -116,7 +120,7 @@ update_missing_ports_file: checked_versions_defined checked_no_uncategorized
 	            echo -e "\t   REP_DIR=\$${REP_DIR(\$$@)} \\"; \
 	            echo -e "\t   MISSING_PORTS_FILE=$(MISSING_PORTS_FILE) \\"; \
 	            echo -e "\t   VERBOSE=$(VERBOSE)"; \
-	          ) > $(GEN_MISSING_PORTS_MK)
+	          ) >> $(GEN_MISSING_PORTS_MK)
 	$(VERBOSE)mkdir -p $(dir $(MISSING_PORTS_FILE))
 	$(VERBOSE)rm -f $(MISSING_PORTS_FILE)
 	$(VERBOSE)touch $(MISSING_PORTS_FILE)
