@@ -1,4 +1,4 @@
-#!/usr/bin/make -sf
+#!/usr/bin/env -S make -sf
 
 #
 # \brief  Tool to GNAT-prove and test the Consistent Block Encrypter (CBE)
