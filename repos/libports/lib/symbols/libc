@@ -412,6 +412,8 @@ iswupper T
 iswxdigit T
 isxdigit T
 jrand48 T
+kevent T
+kqueue T
 kill W
 killpg T
 ksem_init T

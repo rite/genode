@@ -175,7 +175,19 @@ extern "C" int freebsd11_readdir_r(DIR *dirp,
 }
 
 
+extern "C" int freebsd11_kevent(int,
+                                const struct kevent*,
+                                int,
+                                struct kevent *,
+                                int,
+                                const struct timespec*)
+{
+	return 0;
+}
+
+
 __sym_compat(fstat, freebsd11_fstat, FBSD_1.0);
 __sym_compat(stat, freebsd11_stat, FBSD_1.0);
 __sym_compat(lstat, freebsd11_lstat, FBSD_1.0);
 __sym_compat(readdir_r, freebsd11_readdir_r, FBSD_1.0);
+__sym_compat(kevent, freebsd11_kevent, FBSD_1.0);

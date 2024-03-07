@@ -158,6 +158,7 @@ DUMMY(int   , -1, _umtx_op, (void *, int , u_long, void *, void *))
 __SYS_DUMMY(int,    -1, aio_suspend, (const struct aiocb * const[], int, const struct timespec *));
 __SYS_DUMMY(int   , -1, getfsstat, (struct statfs *, long, int))
 __SYS_DUMMY(int, -1, kevent, (int, const struct kevent*, int, struct kevent *, int, const struct timespec*));
+__SYS_DUMMY(int, -1, kqueue, (void));
 __SYS_DUMMY(void  ,   , map_stacks_exec, (void));
 __SYS_DUMMY(int   , -1, ptrace, (int, pid_t, caddr_t, int));
 __SYS_DUMMY(ssize_t, -1, sendmsg, (int s, const struct msghdr*, int));
