@@ -1,0 +1,43 @@
+##
+# Reset the target machine via Waveshare Modbus POE ETH Relay
+#
+# \param --power-off-waveshare-host   network address of device
+# \param --power-off-waveshare-port   network port of device
+# \param --power-off-waveshare-relay  relay channel number
+#
+
+
+proc power_off_waveshare_host { } {
+	return [get_cmd_arg_first --power-off-waveshare-host localhost]
+}
+
+
+proc power_off_waveshare_port { } {
+	return [get_cmd_arg_first --power-off-waveshare-port 0]
+}
+
+
+proc power_off_waveshare_channel { } {
+	return [get_cmd_arg_first --power-off-waveshare-channel 0]
+}
+
+
+proc run_power_off { } {
+
+	set    command \x00\x00
+	append command \x00\x00
+	append command [binary format S 6]
+	append command \x01
+	append command \x05
+	append command [binary format S [expr [power_off_waveshare_channel]-1]]
+	append command \x00\x00
+
+	puts "switch relay channel [power_off_waveshare_channel] off"
+
+	set fp [socket [power_off_waveshare_host] [power_off_waveshare_port]]
+	fconfigure $fp -translation binary
+	puts -nonewline $fp $command
+	close $fp
+
+	return true
+}
