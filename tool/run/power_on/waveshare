@@ -1,3 +1,5 @@
+#!/usr/bin/expect
+
 ##
 # Reset the target machine via Waveshare Modbus POE ETH Relay
 #
@@ -40,4 +42,25 @@ proc run_power_on { } {
 	close $fp
 
 	return true
+}
+
+
+proc _get_cmd_arg_first { arg_name default_value } {
+	global argv argc
+
+	if { $argc != 3 } {
+		puts "usage: $::argv0 HOST PORT CHANNEL"
+		exit 1
+	}
+	switch $arg_name {
+		"--power-on-waveshare-host"    { return [lindex $argv 0] }
+		"--power-on-waveshare-port"    { return [lindex $argv 1] }
+		"--power-on-waveshare-channel" { return [lindex $argv 2] }
+	}
+}
+
+
+if { [info script] eq $::argv0 } {
+	rename _get_cmd_arg_first get_cmd_arg_first
+	run_power_on
 }
