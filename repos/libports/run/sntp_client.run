@@ -1,5 +1,3 @@
-if { [get_cmd_switch --autopilot] } { assert_spec x86 }
-
 if { [have_spec linux] } {
 	puts "Run script is not supported on this platform."
 	exit 0
@@ -46,7 +44,7 @@ install_config {
 	</start>
 
 	<start name="drivers" caps="1200" managing_system="yes">
-		<resource name="RAM" quantum="32M"/>
+		<resource name="RAM" quantum="40M"/>
 		<binary name="init"/>
 		<route>
 			<service name="ROM" label="config"> <parent label="drivers.config"/> </service>
