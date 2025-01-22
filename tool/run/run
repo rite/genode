@@ -25,14 +25,22 @@ proc strip_whitespace {string} {
 
 
 ##
+# Check if the specified requirement is satisfied
+#
+proc assert {expression} {
+	if {![expr $expression]} {
+		puts stderr "Test requires '$expression'"
+		exit 1
+	}
+}
+
+
+##
 # Check if the specified spec requirement is satisfied
 #
 proc assert_spec {spec} {
-	global specs
-	if {[lsearch $specs $spec] == -1} {
-		puts stderr "Test requires '$spec'"
-		exit 1
-	}
+	puts "Warning: 'assert_spec' is deprecated, use 'assert {\[have_spec $spec\]}' instead"
+	assert {[have_spec $spec]}
 }
 
 
