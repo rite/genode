@@ -8,7 +8,7 @@ assert {[have_spec x86]}
 
 if { [have_cmd_arg --autopilot] } {
 	assert {!([have_spec x86_32] && ![have_include power_on/qemu])} \
-		nightly x86 32bit test machine has no vmx support
+		"Nightly x86 32-bit test machine has no vmx support."
 
 	assert {!([have_include power_on/qemu] && [have_spec sel4])}
 

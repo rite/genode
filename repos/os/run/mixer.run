@@ -197,9 +197,8 @@ install_config {
 	</config>
 }
 
-assert {![have_cmd_arg --autopilot]} {
-	Autopilot mode is not supported by this run script.
-}
+assert {![have_cmd_arg --autopilot]} \
+	"Autopilot mode is not supported by this run script."
 
 if {[expr ![file exists bin/client1.f32] || ![file exists bin/client2.f32]]} {
 	puts ""

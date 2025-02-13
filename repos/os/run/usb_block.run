@@ -2,7 +2,7 @@ assert {[have_board pc]}
 
 if {[have_cmd_arg --autopilot]} {
 	assert {[have_include "power_on/qemu"]} \
-		Autopilot mode is not supported on this platform.
+		"Autopilot mode is not supported on this platform."
 }
 
 create_boot_directory

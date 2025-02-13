@@ -11,5 +11,5 @@ if {[have_cmd_arg --autopilot]} {
 	assert {![have_board linux] &&
 	        ![have_board zynq_qemu] &&
 	        ![have_board virt_qemu_riscv]} \
-		Autopilot mode is not supported on this platform.
+		"Autopilot mode is not supported on this platform."
 }

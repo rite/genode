@@ -1,4 +1,4 @@
-assert_spec linux
+assert {[have_spec linux]}
 
 lappend depot_archives [depot_user]/src/[base_src]
 lappend depot_archives [depot_user]/src/init
