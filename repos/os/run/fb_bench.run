@@ -1,14 +1,6 @@
 assert {[have_recipe pkg/[drivers_interactive_pkg]]} \
 	"Recipe for 'pkg/[drivers_interactive_pkg]' not available."
 
-assert {![have_board imx7d_sabre]}
-assert {![have_board imx6q_sabrelite]}
-assert {![have_board rpi3]}
-assert {![have_board zynq_qemu]}
-assert {![have_board zynq_usrp_e31x]}
-assert {![have_board imx53_qsb_tz]}
-assert {!([have_board imx53_qsb] && [have_spec foc])}
-
 if {[have_cmd_arg --autopilot]} {
 	assert {![have_spec linux] && ![have_board virt_qemu_riscv]} \
 		"Autopilot mode is not supported on this platform."
