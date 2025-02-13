@@ -30,7 +30,7 @@ proc strip_whitespace {string} {
 # This is a reimplementation of TCLs ::control::assert, but tailored for the
 # run tool.
 #
-proc assert {expression args} {
+proc assert { expression { msg "" } } {
 
 	set code [catch {uplevel 1 [list expr $expression]} res]
 	if {$code} {
@@ -43,8 +43,8 @@ proc assert {expression args} {
 	if {$res} {return}
 
 	puts stderr "Test requires '$expression'"
-	if {[llength $args]} {
-		puts stderr [join $args]
+	if {$msg != ""} {
+		puts stderr $msg
 	}
 
 	exit 1
