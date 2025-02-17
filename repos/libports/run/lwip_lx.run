@@ -20,7 +20,7 @@
 #    ! sudo ip tuntap delete $TAP_DEV mode tap
 #
 
-assert_spec linux
+assert {[have_spec linux]}
 
 build {
 	core init timer lib/ld lib/libc lib/vfs lib/vfs_lwip
@@ -116,6 +116,8 @@ install_config {
 }
 
 build_boot_image [build_artifacts]
+
+assert {![have_cmd_arg --autopilot]}
 
 run_genode_until forever
 

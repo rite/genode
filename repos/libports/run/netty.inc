@@ -266,6 +266,8 @@ append_qemu_nic_args "host=10.0.2.1,dhcpstart=10.0.2.55,hostfwd=tcp::10080-:80,h
 # this works only if board/*/qemu_args does not declare "-netdev user,..."
 #append qemu_args " -netdev tap,id=net0,ifname=tap0,script=no "
 
+assert {![have_cmd_arg --autopilot]}
+
 run_genode_until forever
 
 # vi: set ft=tcl :
