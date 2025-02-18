@@ -598,7 +598,6 @@ proc have_cmd_arg { arg_name } {
 # Return true if command-line switch was specified
 #
 proc get_cmd_switch { arg_name } {
-	puts "Warning: 'get_cmd_switch' is deprecated, use 'have_cmd_arg' instead"
 	return [have_cmd_arg $arg_name]
 }
 
@@ -643,7 +642,6 @@ proc cmd_arg { arg_name default_value } {
 # list of argument values is returned.
 #
 proc get_cmd_arg { arg_name default_value } {
-	puts "Warning: 'get_cmd_arg' is deprecated, use 'cmd_arg' instead"
 	return [cmd_arg $arg_name $default_value]
 }
 
