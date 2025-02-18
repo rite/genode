@@ -55,7 +55,6 @@ proc assert { expression { msg "" } } {
 # Check if the specified spec requirement is satisfied
 #
 proc assert_spec {spec} {
-	puts "Warning: 'assert_spec' is deprecated, use 'assert {\[have_spec $spec\]}' instead"
 	assert {[have_spec $spec]}
 }
 
