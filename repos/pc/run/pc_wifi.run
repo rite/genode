@@ -10,7 +10,7 @@ source ${genode_dir}/repos/dde_linux/run/wifi_config.inc
 #
 # Restrict platforms
 #
-assert_spec x86
+assert {[have_spec x86]}
 
 #
 # Build
@@ -276,6 +276,8 @@ exec echo dummy > bin/wifi.lib.so
 #
 
 build_boot_image [build_artifacts]
+
+assert {![have_cmd_arg --autopilot]}
 
 run_genode_until forever
 
