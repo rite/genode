@@ -4,9 +4,9 @@ build {
 }
 
 assert {[have_include power_on/qemu]}
-assert {![have_spec foc]} {
-	foc in principle supports migration, but due to bug #4357 foc is not tested
-}
+assert {[have_spec nova] || [have_spec sel4]} \
+	"foc in principle supports migration, but due to bug #4357 foc is not tested"
+
 
 set cpu_width  4
 set cpu_height 1

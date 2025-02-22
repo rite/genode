@@ -197,8 +197,6 @@ install_config {
 	</config>
 }
 
-assert {![have_cmd_arg --autopilot]}
-
 if {[expr ![file exists bin/client1.f32] || ![file exists bin/client2.f32]]} {
 	puts ""
 	puts "The sample files are missing. Please take a look at repos/dde_bsd/README"
