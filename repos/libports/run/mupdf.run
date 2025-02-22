@@ -121,7 +121,5 @@ build_boot_image [list {*}[build_artifacts] test.pdf]
 
 append qemu_args " -m 800"
 
-assert {![have_cmd_arg --autopilot]}
-
 run_genode_until forever
 

@@ -249,7 +249,7 @@ build_boot_image [build_artifacts]
 
 append qemu_args "-nographic "
 
-if {![have_cmd_arg --autopilot] && ![have_include power_on/qemu]} {
+if {![have_include "power_on/qemu"]} {
 	run_genode_until forever
 	exit 0
 }

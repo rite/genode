@@ -48,6 +48,4 @@ install_config {
 
 build_boot_image [qt6_boot_modules]
 
-assert {![have_cmd_arg --autopilot]}
-
 run_genode_until forever

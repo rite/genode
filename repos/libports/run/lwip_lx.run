@@ -117,8 +117,6 @@ install_config {
 
 build_boot_image [build_artifacts]
 
-assert {![have_cmd_arg --autopilot]}
-
 run_genode_until forever
 
 # vi: set ft=tcl :
