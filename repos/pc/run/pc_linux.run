@@ -127,7 +127,5 @@ exec gzip $ramdisk
 # Trick run tools that the kernel started
 proc run_boot_string { } { return "Booting Linux" }
 
-assert {![have_cmd_arg --autopilot]}
-
 run_genode_until forever
 interact
