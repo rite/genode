@@ -149,6 +149,4 @@ build { lib/ld lib/libc lib/vfs lib/posix test/fork test/execve }
 
 build_boot_image [build_artifacts]
 
-assert {![have_cmd_arg --autopilot]}
-
 run_genode_until forever

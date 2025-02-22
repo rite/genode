@@ -294,6 +294,4 @@ if {[have_include "power_on/qemu"]} {
 	}
 }
 
-assert {![have_cmd_arg --autopilot]}
-
 run_genode_until forever

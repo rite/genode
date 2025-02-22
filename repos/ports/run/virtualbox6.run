@@ -302,6 +302,4 @@ build_boot_image $boot_modules
 
 append qemu_args " -m 3500 -cpu EPYC "
 
-assert {![have_cmd_arg --autopilot]}
-
 run_genode_until forever
