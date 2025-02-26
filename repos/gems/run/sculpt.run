@@ -4,27 +4,18 @@
 # \date   2017-09-07
 #
 
+assert {[have_board pc]           ||
+        [have_board imx8q_evk]    ||
+        [have_board mnt_reform2]  ||
+        [have_board mnt_pocket]   ||
+        [have_board linux]        ||
+        [have_board pinephone]}
+
+
 #
 # Note: the string must be exactly 5 bytes long.
 #
 proc sculpt_version { } { return "24.10" }
-
-
-proc assert_platform_supported { } {
-
-	if {[have_board pc]}          return
-	if {[have_board imx8q_evk]}   return
-	if {[have_board mnt_reform2]} return
-	if {[have_board mnt_pocket]}  return
-	if {[have_board linux]}       return
-	if {[have_board pinephone]}   return
-
-	puts "Platform is unsupported.";
-	exit 0;
-}
-
-assert_platform_supported
-
 
 proc log_core { } {
 
