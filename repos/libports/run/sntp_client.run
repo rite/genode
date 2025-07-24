@@ -72,10 +72,11 @@ install_config {
 
 			</domain>
 
-			<domain name="downlink" interface="10.0.3.1/24">
+			<domain name="downlink" interface="10.0.3.1/24" verbose_packets="yes">
 
 				<dhcp-server ip_first="10.0.3.2"
 				             ip_last="10.0.3.2"
+				             ip_lease_time_sec="30"
 				             dns_config_from="uplink"/>
 
 				<tcp dst="0.0.0.0/0"><permit-any domain="uplink" /></tcp>
@@ -102,6 +103,8 @@ append qemu_args "  -nographic "
 append_qemu_nic_args
 
 set done_string {report_rom\]   <set_rtc year.*?\n}
+
+run_genode_until forever
 
 run_genode_until $done_string 90
 set serial_id [output_spawn_id]
