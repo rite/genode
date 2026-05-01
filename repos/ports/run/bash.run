@@ -10,6 +10,9 @@ import_from_depot [depot_user]/src/[base_src] \
                   [depot_user]/src/bash \
                   [depot_user]/src/coreutils \
                   [depot_user]/src/vfs \
+                  [depot_user]/src/vfs_block \
+                  [depot_user]/src/vfs_fatfs \
+                  [depot_user]/src/vfs_import \
                   [depot_user]/src/vfs_pipe \
                   [depot_user]/src/nitpicker \
                   [depot_user]/src/fs_rom
@@ -75,6 +78,14 @@ config | verbose: yes
       + parent
       + any-child
 
++ start vfs_block | caps: 200 | ram: 196M
+  + provides | + service Block
+  + config
+    + vfs
+      + ram
+      + import | + rom test.hda
+    + default-policy | file: test.hda | block_size: 512 | writeable: yes
+
 + start vfs | caps: 120 | ram: 30M
   + provides | + service File_system
   + config
@@ -87,6 +98,7 @@ config | verbose: yes
       + dir home  | + ram
       + dir share | + dir vim | + rom vimrc
       + dir tmp   | + ram
+      + dir fatfs | + fatfs
       + dir pipe  | + pipe
       + dir dev
         + zero
@@ -127,8 +139,24 @@ set fd [open [run_dir]/genode/focus w]
 puts $fd "focus | label: terminal -> \ | domain: default\n-"
 close $fd
 
+#
+# Prepare hard-disk image for test (used in RAM)
+#
+
+set disk_image "bin/test.hda"
+set cmd "dd if=/dev/zero of=$disk_image bs=1024 count=65536"
+puts "creating disk image: $cmd"
+catch { exec sh -c $cmd }
+
+set mkfs_cmd   [installed_command mkfs.vfat]
+set mkfs_opts  "-F32 -nlibc_vfs"
+
+set cmd "$mkfs_cmd $mkfs_opts $disk_image"
+puts "formating disk: $cmd"
+catch { exec sh -c $cmd }
+
 build { lib/ld lib/libc lib/vfs lib/posix test/fork test/execve }
 
-build_boot_image [build_artifacts]
+build_boot_image [list {*}[build_artifacts] test.hda]
 
 run_genode_until forever
